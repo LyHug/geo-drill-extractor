@@ -1,0 +1,5 @@
+# 此文件用于保持data目录结构
+# 请将以下数据文件放置在此目录中:
+# - 导线点.csv (测量控制点坐标)
+# - ground_truth_annotations.csv (实体数量标注)
+# - coordinate_verification_results.csv (手动坐标验证，可选)

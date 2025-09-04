@@ -1,0 +1,92 @@
+# 钻孔实体提取系统主配置文件
+# Stage 7 重构版本 - 模块化配置管理
+
+# 系统信息
+system:
+  name: "KG钻孔实体提取系统"
+  version: "2.0.0"
+  stage: "Stage 7 - 配置和文档重构"
+  refactor_date: "2025-09-04"
+
+# 配置文件引用
+# 注意：以下专门配置文件会扩展和覆盖下方的基础配置
+config_imports:
+  llm_config: "./configs/llm.yaml"
+  data_config: "./configs/data.yaml"
+  processing_config: "./configs/processing.yaml"
+  output_config: "./configs/output.yaml"
+  experiment_config: "./configs/experiment.yaml"
+  logging_config: "./configs/logging.yaml"
+
+# 兼容性配置 - 保持向后兼容  
+# 为确保现有代码正常工作，保留一些关键配置项
+# 这些配置可以被专门的配置文件覆盖
+
+# 数据路径配置
+data:
+  documents_dir: "./documents"
+  survey_points_file: "./data/导线点.csv"
+  ground_truth_file: "./data/ground_truth_annotations.csv"
+  verification_file: "./data/coordinate_verification_results.csv"
+  output_dir: "./output"
+
+# LLM基础配置
+llm:
+  default_model: "deepseek-r1-distill-qwen-32b-aliyun"
+  temperature: 0.1
+  max_tokens: 8192
+  timeout: 60
+  retry_times: 3
+  
+  # API密钥配置
+  api_keys:
+    deepseek-official: "sk-6dfcbcb8058541758df6c661a2907185"
+    aliyun-bailian: "sk-2da02278bd9c483ab8d43084788501b4"
+    openrouter: "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"
+
+# 处理配置
+processing:
+  parallel:
+    enabled: true
+    max_workers: 5
+    max_concurrent_llm_calls: 10
+  text_chunking:
+    max_chunk_size: 2000
+    overlap: 200
+  cache:
+    enabled: true
+    max_size: 1000
+    ttl: 3600
+
+# 实验配置
+experiment:
+  output_dir: "simplified_system/experiment_results"
+  test_documents: 20
+  default_models:
+    - 'deepseek-r1-distill-qwen-32b-aliyun'
+  default_repetitions: 5
+
+# 输出配置
+output:
+  batch_formats: ["csv", "excel", "json"]
+  single_format: "json"
+
+# 日志配置
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "extraction_chain.log"
+
+# 配置加载说明
+config_notes: |
+  这是Stage 7重构后的主配置文件。
+  
+  配置加载优先级：
+  1. 专门配置文件（configs/*.yaml）- 最高优先级
+  2. 主配置文件（config.yaml）- 基础配置和兼容性
+  3. 环境变量 - 覆盖任何配置
+  
+  使用方法：
+  - 修改专门配置文件以调整特定功能
+  - 主配置文件主要用于兼容性和快速设置
+  - 生产环境建议使用环境变量管理敏感信息

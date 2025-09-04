@@ -1,0 +1,220 @@
+# 处理配置文件
+# 包含并行处理、文本处理、缓存等配置
+
+# 并行处理配置
+parallel:
+  enabled: true
+  max_workers: 5
+  max_concurrent_llm_calls: 10
+  
+  # 工作池配置
+  worker_pool:
+    type: 'thread'  # thread, process
+    timeout: 300    # 秒
+    keep_alive: true
+    
+  # 任务分配策略
+  task_scheduling:
+    strategy: 'round_robin'  # round_robin, load_balanced, priority
+    batch_size: 'auto'
+    queue_size: 100
+
+# 文本处理配置
+text_processing:
+  # 文本分块配置
+  chunking:
+    max_chunk_size: 2000
+    overlap: 200
+    chunk_strategy: 'sentence_boundary'  # character, word, sentence_boundary
+    preserve_structure: true
+    
+  # 文档转换配置
+  document_conversion:
+    preserve_tables: true
+    preserve_formatting: true
+    extract_images: false
+    image_extraction_path: './simplified_system/temp/images'
+    
+  # 文本预处理
+  preprocessing:
+    normalize_whitespace: true
+    remove_empty_lines: true
+    fix_encoding: true
+    detect_language: false
+
+# 缓存配置
+cache:
+  enabled: true
+  
+  # 内存缓存
+  memory_cache:
+    max_size: 1000
+    ttl: 3600  # 秒
+    eviction_policy: 'lru'  # lru, fifo, random
+    
+  # 磁盘缓存
+  disk_cache:
+    enabled: false
+    cache_dir: './simplified_system/cache'
+    max_size_gb: 1.0
+    ttl: 86400  # 24小时
+    
+  # 缓存策略
+  strategy:
+    cache_llm_responses: true
+    cache_document_content: true
+    cache_coordinate_calculations: true
+    cache_validation_results: false
+
+# 错误处理配置
+error_handling:
+  # 重试策略
+  retry:
+    max_attempts: 3
+    base_delay: 1.0
+    max_delay: 30.0
+    backoff_factor: 2.0
+    jitter: true
+    
+  # 错误分类
+  error_classification:
+    transient_errors:
+      - 'timeout'
+      - 'connection_error'
+      - 'rate_limit'
+      - 'server_error'
+    permanent_errors:
+      - 'authentication_error'
+      - 'permission_denied'
+      - 'invalid_input'
+      - 'quota_exceeded'
+      
+  # 错误恢复策略
+  recovery_strategy:
+    continue_on_error: true
+    save_partial_results: true
+    fallback_model: 'deepseek-r1-distill-qwen-32b-aliyun'
+    
+  # 错误报告
+  reporting:
+    log_all_errors: true
+    generate_error_summary: true
+    error_notification: false
+
+# 性能监控配置
+performance_monitoring:
+  enabled: true
+  
+  # 性能指标
+  metrics:
+    track_processing_time: true
+    track_memory_usage: true
+    track_cpu_usage: false
+    track_api_latency: true
+    
+  # 性能阈值
+  thresholds:
+    max_processing_time: 300  # 秒
+    max_memory_usage_mb: 2048
+    max_api_latency: 30
+    
+  # 性能优化
+  optimization:
+    auto_scaling: false
+    load_balancing: false
+    adaptive_batching: true
+    
+  # 性能报告
+  reporting:
+    interval: 3600  # 秒
+    format: ['json', 'csv']
+    include_charts: false
+
+# 任务队列配置
+task_queue:
+  # 队列类型
+  type: 'memory'  # memory, redis, celery
+  
+  # 队列参数
+  parameters:
+    max_size: 1000
+    timeout: 300
+    retry_failed_tasks: true
+    
+  # 任务优先级
+  priority:
+    high_priority_models: ['gpt-4o', 'deepseek-v3']
+    default_priority: 5
+    max_priority: 10
+    
+  # 死信队列
+  dead_letter_queue:
+    enabled: true
+    max_retries: 3
+    retention_period: 86400  # 秒
+
+# 内存管理配置
+memory_management:
+  # 内存限制
+  limits:
+    max_memory_per_worker: '1GB'
+    max_total_memory: '4GB'
+    memory_warning_threshold: 0.8
+    
+  # 垃圾回收
+  garbage_collection:
+    auto_gc: true
+    gc_threshold: 0.8
+    force_gc_interval: 300  # 秒
+    
+  # 内存优化
+  optimization:
+    use_memory_mapping: false
+    lazy_loading: true
+    stream_processing: true
+
+# 临时文件管理
+temp_file_management:
+  temp_dir: './simplified_system/temp'
+  max_temp_size_gb: 5.0
+  cleanup_interval: 3600  # 秒
+  auto_cleanup_on_exit: true
+  
+  # 临时文件类型
+  file_types:
+    document_cache: 
+      extension: '.cache'
+      ttl: 3600
+    processing_temp:
+      extension: '.tmp'
+      ttl: 1800
+    conversion_output:
+      extension: '.conv'
+      ttl: 7200
+
+# 资源限制配置
+resource_limits:
+  # CPU限制
+  cpu:
+    max_cpu_percent: 80
+    nice_level: 0
+    cpu_affinity: null  # null表示不限制CPU核心
+    
+  # 内存限制
+  memory:
+    max_rss_mb: 4096
+    max_vms_mb: 8192
+    oom_killer_disable: false
+    
+  # 网络限制
+  network:
+    max_connections: 100
+    connection_timeout: 30
+    read_timeout: 60
+    max_retries: 3
+    
+  # 文件系统限制
+  filesystem:
+    max_open_files: 1024
+    max_temp_files: 100
+    max_log_size_mb: 100

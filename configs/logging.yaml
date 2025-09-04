@@ -1,0 +1,310 @@
+# 日志配置文件
+# 包含系统日志、性能日志、错误日志等配置
+
+# 基础日志配置
+basic:
+  # 全局日志级别
+  level: "INFO"
+  
+  # 日志格式
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  date_format: "%Y-%m-%d %H:%M:%S"
+  
+  # 日志输出目录
+  log_dir: "./simplified_system/logs"
+  
+  # 编码设置
+  encoding: "utf-8"
+
+# 主系统日志
+main_log:
+  # 日志文件配置
+  file: "extraction_chain.log"
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # 文件轮转配置
+  rotation:
+    enabled: true
+    max_size: "10MB"
+    backup_count: 5
+    when: "midnight"  # midnight, W0-W6 (weekday), D (daily), H (hourly)
+    interval: 1
+    
+  # 日志过滤
+  filters:
+    exclude_modules: []
+    include_only_modules: []
+    min_level: "INFO"
+
+# 性能日志
+performance_log:
+  enabled: true
+  file: "performance.log"
+  level: "INFO"
+  
+  # 性能指标记录
+  metrics:
+    - "processing_time"
+    - "memory_usage"
+    - "api_latency" 
+    - "throughput"
+    - "error_rate"
+    
+  # 记录间隔
+  log_interval: 60  # 秒
+  
+  # 性能阈值告警
+  thresholds:
+    processing_time_warning: 300  # 秒
+    memory_usage_warning: 2048    # MB
+    api_latency_warning: 30       # 秒
+    error_rate_warning: 0.1       # 10%
+    
+  # 轮转配置
+  rotation:
+    max_size: "50MB"
+    backup_count: 10
+
+# 错误日志
+error_log:
+  enabled: true
+  file: "errors.log"
+  level: "ERROR"
+  
+  # 错误分类
+  error_categories:
+    api_errors: "API调用错误"
+    processing_errors: "数据处理错误"
+    validation_errors: "数据验证错误"
+    system_errors: "系统错误"
+    
+  # 错误统计
+  error_statistics:
+    enabled: true
+    reset_interval: 86400  # 24小时
+    
+  # 错误报告
+  error_reporting:
+    generate_daily_report: true
+    report_format: "json"
+    include_stack_trace: true
+    
+  # 轮转配置
+  rotation:
+    max_size: "20MB"
+    backup_count: 15
+
+# 调试日志
+debug_log:
+  enabled: false
+  file: "debug.log"
+  level: "DEBUG"
+  
+  # 调试模块
+  debug_modules:
+    - "kg_drill_extraction.extraction"
+    - "kg_drill_extraction.llm"
+    - "kg_drill_extraction.evaluation"
+    
+  # 详细调试信息
+  include_details:
+    function_calls: true
+    variable_values: false
+    api_requests: true
+    api_responses: false
+    
+  # 轮转配置
+  rotation:
+    max_size: "100MB"
+    backup_count: 3
+
+# 实验日志
+experiment_log:
+  enabled: true
+  file: "experiment.log"
+  level: "INFO"
+  
+  # 实验记录内容
+  log_content:
+    experiment_start_end: true
+    model_performance: true
+    document_processing: true
+    error_details: true
+    statistical_summary: true
+    
+  # 实验日志格式
+  format: "%(asctime)s - [%(experiment_id)s] - %(levelname)s - %(message)s"
+  
+  # 轮转配置
+  rotation:
+    max_size: "30MB"
+    backup_count: 20
+
+# API日志
+api_log:
+  enabled: true
+  file: "api_calls.log"
+  level: "INFO"
+  
+  # API调用记录
+  record_details:
+    request_headers: false
+    request_body: false
+    response_headers: false
+    response_body: false
+    timing: true
+    status_codes: true
+    
+  # API统计
+  api_statistics:
+    enabled: true
+    track_by_model: true
+    track_by_endpoint: true
+    track_response_times: true
+    
+  # 轮转配置
+  rotation:
+    max_size: "25MB"
+    backup_count: 12
+
+# 控制台日志
+console_log:
+  enabled: true
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # 颜色配置
+  colored_output: true
+  colors:
+    DEBUG: "blue"
+    INFO: "green"
+    WARNING: "yellow"
+    ERROR: "red"
+    CRITICAL: "magenta"
+    
+  # 控制台过滤
+  filters:
+    hide_api_details: true
+    hide_debug_info: true
+    show_progress: true
+
+# 日志聚合配置
+aggregation:
+  # 日志收集
+  log_collection:
+    enabled: false
+    collection_interval: 300  # 秒
+    
+  # 集中化日志
+  centralized_logging:
+    enabled: false
+    log_server: null
+    protocol: "syslog"  # syslog, http, tcp
+    
+  # 日志分析
+  log_analysis:
+    enabled: false
+    analysis_interval: 3600  # 秒
+    generate_insights: false
+
+# 日志清理配置
+cleanup:
+  # 自动清理
+  auto_cleanup: true
+  
+  # 清理策略
+  cleanup_policy:
+    max_age_days: 30
+    max_total_size_gb: 5.0
+    keep_recent_files: 10
+    
+  # 清理调度
+  cleanup_schedule:
+    enabled: true
+    cleanup_time: "02:00"  # 凌晨2点
+    cleanup_weekday: 0     # 0=周一, 6=周日
+    
+  # 归档选项
+  archive_before_delete: true
+  archive_format: "tar.gz"
+  archive_location: "./simplified_system/logs/archive"
+
+# 日志监控配置  
+monitoring:
+  # 日志监控
+  log_monitoring: false
+  
+  # 监控指标
+  monitor_metrics:
+    - "log_file_size"
+    - "error_rate"
+    - "warning_rate"
+    - "disk_usage"
+    
+  # 告警配置
+  alerts:
+    enabled: false
+    disk_usage_threshold: 0.9
+    error_rate_threshold: 0.1
+    log_size_threshold: "100MB"
+    
+  # 监控输出
+  monitoring_output:
+    report_file: "log_monitoring.json"
+    update_interval: 3600  # 秒
+
+# 特定模块日志配置
+module_logging:
+  # 提取模块
+  extraction:
+    level: "INFO"
+    separate_file: false
+    file: "extraction.log"
+    
+  # LLM模块
+  llm:
+    level: "INFO"
+    separate_file: false
+    file: "llm.log"
+    include_api_calls: true
+    
+  # 评估模块
+  evaluation:
+    level: "INFO" 
+    separate_file: false
+    file: "evaluation.log"
+    
+  # 配置模块
+  config:
+    level: "WARNING"
+    separate_file: false
+    
+  # 实验模块
+  experiment:
+    level: "INFO"
+    separate_file: true
+    file: "experiment.log"
+
+# 日志安全配置
+security:
+  # 敏感信息过滤
+  filter_sensitive_data: true
+  
+  # 敏感字段
+  sensitive_fields:
+    - "api_key"
+    - "password"
+    - "token" 
+    - "secret"
+    - "credential"
+    
+  # 脱敏策略
+  masking_strategy: "partial"  # full, partial, hash
+  masking_pattern: "***"
+  
+  # 日志加密
+  encryption:
+    enabled: false
+    algorithm: "AES-256"
+    key_file: "log_encryption.key"

@@ -1,0 +1,430 @@
+# 输出配置文件
+# 包含各种输出格式的详细配置
+
+# 通用输出配置
+general:
+  batch_formats: ['csv', 'excel', 'json']
+  single_format: 'json'
+  timestamp_format: '%Y-%m-%d_%H-%M-%S'
+  include_metadata: true
+  
+  # 输出文件命名
+  file_naming:
+    use_timestamp: true
+    include_model_name: true
+    include_experiment_id: false
+    custom_prefix: ''
+    custom_suffix: ''
+
+# CSV输出配置
+csv_export:
+  # 基础选项
+  encoding: 'utf-8-sig'
+  delimiter: ','
+  quoting: 'minimal'
+  index: false
+  header: true
+  
+  # 主数据表字段配置
+  main_fields:
+    - field: "model_name"
+      display_name: "模型名称"
+      data_type: "string"
+      default: ""
+      
+    - field: "repetition_round"
+      display_name: "重复轮次"
+      data_type: "int"
+      default: 0
+      
+    - field: "document_name"
+      display_name: "文档来源"
+      data_type: "string"
+      required: true
+      
+    - field: "processing_time"
+      display_name: "处理时间(秒)"
+      data_type: "float"
+      format: "%.2f"
+      
+    - field: "hole_id"
+      display_name: "钻孔编号"
+      data_type: "string"
+      required: true
+      
+    - field: "location_desc"
+      display_name: "位置描述"
+      data_type: "string"
+      default: ""
+      max_length: 200
+      
+    - field: "location_desc_direction_type"
+      display_name: "位置描述方向类型"
+      data_type: "string"
+      default: ""
+      
+    - field: "start_coord_x"
+      display_name: "起点X坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "start_coord_y"
+      display_name: "起点Y坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "start_coord_z"
+      display_name: "起点Z坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "start_coord_confidence"
+      display_name: "起点坐标置信度"
+      data_type: "float"
+      format: "%.3f"
+      
+    - field: "end_coord_x"
+      display_name: "终点X坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "end_coord_y"
+      display_name: "终点Y坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "end_coord_z"
+      display_name: "终点Z坐标"
+      data_type: "float"
+      format: "%.4f"
+      
+    - field: "end_coord_confidence"
+      display_name: "终点坐标置信度"
+      data_type: "float"
+      format: "%.3f"
+      
+    - field: "actual_azimuth"
+      display_name: "实际方位角"
+      data_type: "float"
+      format: "%.2f"
+      unit: "度"
+      
+    - field: "actual_inclination"
+      display_name: "实际倾角"
+      data_type: "float"
+      format: "%.2f"
+      unit: "度"
+      
+    - field: "actual_depth"
+      display_name: "实际深度"
+      data_type: "float"
+      format: "%.2f"
+      unit: "米"
+      
+    - field: "design_depth"
+      display_name: "设计深度"
+      data_type: "float"
+      format: "%.2f"
+      unit: "米"
+      
+    - field: "design_azimuth"
+      display_name: "设计方位角"
+      data_type: "float"
+      format: "%.2f"
+      unit: "度"
+      
+    - field: "design_inclination"
+      display_name: "设计倾角"
+      data_type: "float"
+      format: "%.2f"
+      unit: "度"
+      
+    - field: "start_formation"
+      display_name: "开孔层位"
+      data_type: "string"
+      default: ""
+      
+    - field: "end_formation"
+      display_name: "终孔层位"
+      data_type: "string"
+      default: ""
+      
+    - field: "drilling_date"
+      display_name: "钻进日期"
+      data_type: "string"
+      default: ""
+      
+    - field: "confidence"
+      display_name: "数据置信度"
+      data_type: "float"
+      format: "%.3f"
+      
+    - field: "extracted_at"
+      display_name: "提取时间"
+      data_type: "datetime"
+      format: "%Y-%m-%d %H:%M:%S"
+  
+  # 输出选项
+  options:
+    include_empty_fields: true
+    sort_by_field: "document_name"
+    group_by_document: false
+    add_summary_row: false
+
+# Excel输出配置
+excel_export:
+  engine: 'xlsxwriter'
+  
+  # 主数据表配置
+  main_sheet:
+    name: "钻孔汇总"
+    freeze_panes: [1, 0]
+    auto_filter: true
+    
+    fields:
+      - field: "document_name"
+        display_name: "文档来源"
+        width: 20
+        
+      - field: "hole_id"
+        display_name: "钻孔编号"
+        width: 15
+        
+      - field: "location_desc"
+        display_name: "位置描述"
+        width: 30
+        
+      - field: "start_coord_x"
+        display_name: "起点X"
+        width: 12
+        format: "0.0000"
+        
+      - field: "start_coord_y"
+        display_name: "起点Y"
+        width: 12
+        format: "0.0000"
+        
+      - field: "start_coord_z"
+        display_name: "起点Z"
+        width: 12
+        format: "0.0000"
+        
+      - field: "end_coord_x"
+        display_name: "终点X"
+        width: 12
+        format: "0.0000"
+        
+      - field: "end_coord_y"
+        display_name: "终点Y"
+        width: 12
+        format: "0.0000"
+        
+      - field: "end_coord_z"
+        display_name: "终点Z"
+        width: 12
+        format: "0.0000"
+        
+      - field: "actual_azimuth"
+        display_name: "实际方位角"
+        width: 12
+        format: "0.00"
+        
+      - field: "actual_inclination"
+        display_name: "实际倾角"
+        width: 12
+        format: "0.00"
+        
+      - field: "actual_depth"
+        display_name: "实际深度"
+        width: 12
+        format: "0.00"
+        
+      - field: "start_formation"
+        display_name: "开孔层位"
+        width: 15
+        
+      - field: "end_formation"
+        display_name: "终孔层位"
+        width: 15
+        
+      - field: "confidence"
+        display_name: "数据置信度"
+        width: 12
+        format: "0.000"
+
+  # 坐标详情表配置
+  coord_sheet:
+    name: "坐标详情"
+    freeze_panes: [1, 0]
+    auto_filter: true
+    
+    fields:
+      - field: "document_name"
+        display_name: "文档来源"
+        width: 20
+        
+      - field: "hole_id"
+        display_name: "钻孔编号"
+        width: 15
+        
+      - field: "coord_type"
+        display_name: "坐标类型"
+        width: 10
+        
+      - field: "x_coord"
+        display_name: "X坐标"
+        width: 12
+        format: "0.0000"
+        
+      - field: "y_coord"
+        display_name: "Y坐标"
+        width: 12
+        format: "0.0000"
+        
+      - field: "z_coord"
+        display_name: "Z坐标"
+        width: 12
+        format: "0.0000"
+        
+      - field: "confidence"
+        display_name: "置信度"
+        width: 10
+        format: "0.000"
+        
+      - field: "method"
+        display_name: "推算方法"
+        width: 20
+
+  # 文档统计表配置
+  stats_sheet:
+    name: "文档统计"
+    freeze_panes: [1, 0]
+    auto_filter: true
+    
+    fields:
+      - field: "document_name"
+        display_name: "文档名称"
+        width: 25
+        
+      - field: "processing_time"
+        display_name: "处理时间(秒)"
+        width: 15
+        format: "0.00"
+        
+      - field: "drill_hole_count"
+        display_name: "钻孔数量"
+        width: 12
+        
+      - field: "coordinate_count"
+        display_name: "坐标成功数"
+        width: 12
+        
+      - field: "error_count"
+        display_name: "错误数量"
+        width: 12
+        
+      - field: "success_rate"
+        display_name: "坐标成功率"
+        width: 12
+        format: "0.0%"
+
+  # 格式化选项
+  formatting:
+    header_format:
+      bold: true
+      bg_color: "#D7E4BC"
+      border: 1
+      align: "center"
+      
+    data_format:
+      border: 1
+      text_wrap: true
+      
+    number_formats:
+      coordinate: "0.0000"
+      angle: "0.00"
+      depth: "0.00"
+      confidence: "0.000"
+      percentage: "0.0%"
+
+# JSON输出配置
+json_export:
+  # 基础选项
+  indent: 2
+  ensure_ascii: false
+  sort_keys: false
+  separators: [',', ': ']
+  
+  # 文档级别字段
+  document_fields:
+    - "document_name"
+    - "processing_time"
+    - "metadata"
+    - "errors"
+    - "statistics"
+
+  # 钻孔实体字段配置
+  drill_hole_fields:
+    basic_info:
+      - "hole_id"
+      - "location_desc"
+      - "confidence"
+      - "extracted_at"
+      
+    design_params:
+      - "design_depth"
+      - "design_azimuth"
+      - "design_inclination"
+      - "design_diameter"
+      - "design_purpose"
+      
+    actual_params:
+      - "actual_depth"
+      - "actual_azimuth"
+      - "actual_inclination"
+      - "actual_diameter"
+      - "start_formation"
+      - "end_formation"
+      - "drilling_date"
+      - "deviation"
+
+  # 坐标字段配置
+  coordinate_fields:
+    - "x"
+    - "y"
+    - "z"
+    - "confidence"
+    - "method"
+    - "reference_point"
+
+  # 输出选项
+  options:
+    include_empty_fields: false
+    format_dates: true
+    date_format: "%Y-%m-%d %H:%M:%S"
+    precision: 4
+    include_metadata: true
+    compact_output: false
+    validate_json: true
+
+# 输出后处理配置
+post_processing:
+  # 文件压缩
+  compression:
+    enabled: false
+    format: 'zip'  # zip, tar.gz, 7z
+    compression_level: 6
+    
+  # 文件校验
+  validation:
+    enabled: true
+    check_file_integrity: true
+    generate_checksums: false
+    checksum_algorithm: 'md5'
+    
+  # 文件归档
+  archiving:
+    enabled: false
+    archive_after_days: 30
+    archive_location: './simplified_system/archive'
+    delete_after_archive: false

@@ -1,0 +1,153 @@
+# LLM模型配置文件
+# 包含所有LLM相关设置和API密钥
+
+# 基础LLM配置
+default_model: 'deepseek-r1-distill-qwen-32b-aliyun'
+temperature: 0.1
+max_tokens: 8192
+timeout: 60
+retry_times: 3
+
+# API密钥配置 - 支持环境变量替换
+api_keys:
+  deepseek-official: "sk-6dfcbcb8058541758df6c661a2907185"
+  aliyun-bailian: "sk-2da02278bd9c483ab8d43084788501b4"
+  openrouter: "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"
+
+# 各模型的特定配置
+models:
+  # GPT模型配置
+  gpt:
+    gpt-3.5-turbo:
+      base_url: "https://openrouter.ai/api/v1"
+      provider: "openrouter"
+      max_tokens: 4096
+    gpt-4o-mini:
+      base_url: "https://openrouter.ai/api/v1"
+      provider: "openrouter"
+      max_tokens: 8192
+
+  # DeepSeek模型配置
+  deepseek:
+    deepseek-v3:
+      base_url: "https://api.deepseek.com/v1"
+      provider: "deepseek-official"
+      max_tokens: 8192
+    deepseek-r1:
+      base_url: "https://api.deepseek.com/v1"
+      provider: "deepseek-official"
+      max_tokens: 8192
+    deepseek-r1-distill-qwen-32b-aliyun:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 8192
+    deepseek-r1-distill-qwen-14b-aliyun:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 8192
+    deepseek-r1-distill-qwen-7b-aliyun:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 8192
+
+  # Qwen模型配置
+  qwen:
+    qwen-max:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 8192
+    qwen3-32b:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 8192
+    qwq-32b:
+      base_url: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+      provider: "aliyun-bailian"
+      max_tokens: 32768
+
+# 提示词模板配置
+prompt_templates:
+  entity_extraction:
+    system: |
+      你是一个专业的地质钻孔数据提取专家。请从给定的地质勘探报告中提取钻孔实体信息。
+      
+      请提取以下信息：
+      - 钻孔编号
+      - 设计参数（深度、方位角、倾角）
+      - 实际参数（深度、方位角、倾角）
+      - 位置描述
+      - 开孔和终孔层位
+      - 钻进日期
+      
+      输出格式要求为JSON格式，确保数据准确性。
+      
+    user_template: |
+      请分析以下地质勘探文档内容，提取其中的钻孔实体信息：
+      
+      文档内容：
+      {document_content}
+      
+      请严格按照JSON格式输出结果。
+
+  coordinate_inference:
+    system: |
+      你是一个专业的地质坐标推算专家。基于给定的位置描述和测量点坐标，推断钻孔的起点和终点坐标。
+      
+      请根据以下原则进行坐标推断：
+      1. 分析位置描述中的方向信息（前进、后退、左偏、右偏等）
+      2. 计算相对于参考点的距离和角度
+      3. 考虑地形和测量精度
+      4. 给出置信度评估
+      
+      输出格式要求为JSON格式，包含起点坐标、终点坐标和置信度。
+      
+    user_template: |
+      请根据以下信息推断钻孔坐标：
+      
+      钻孔信息：
+      {drill_hole_info}
+      
+      参考测量点：
+      {survey_points}
+      
+      请计算并输出起点和终点坐标。
+
+# 错误处理和重试配置
+error_handling:
+  max_retries: 3
+  retry_delay: 1.0  # 秒
+  backoff_factor: 2.0
+  timeout_strategy: "exponential_backoff"
+  
+  # 可重试的错误类型
+  retryable_errors:
+    - "timeout"
+    - "rate_limit"
+    - "temporary_unavailable"
+    - "connection_error"
+    
+  # 不可重试的错误类型
+  non_retryable_errors:
+    - "authentication_error" 
+    - "invalid_api_key"
+    - "quota_exceeded"
+    - "model_not_found"
+
+# 性能优化配置
+performance:
+  # 连接池配置
+  connection_pool:
+    max_connections: 20
+    max_keepalive_connections: 5
+    keepalive_expiry: 30
+    
+  # 并发控制
+  concurrency:
+    max_concurrent_requests: 10
+    request_timeout: 60
+    
+  # 缓存配置
+  response_cache:
+    enabled: false
+    max_size: 100
+    ttl: 3600

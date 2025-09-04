@@ -1,0 +1,280 @@
+# 实验配置文件
+# 包含实验执行、模型测试和评估相关配置
+
+# 基础实验配置
+basic:
+  # 默认实验参数
+  default_repetitions: 5
+  default_test_documents: null  # null表示处理所有文档
+  default_models: 
+    - 'deepseek-r1-distill-qwen-32b-aliyun'
+    - 'deepseek-v3-official'
+    - 'qwen-max'
+    - 'gpt-3.5-turbo-openrouter'
+  
+  # 输出目录配置
+  output_dir: './simplified_system/experiment_results'
+  backup_results: true
+  save_intermediate_results: true
+
+# 实验预设配置
+presets:
+  # 快速测试预设
+  quick_test:
+    type: "quick"
+    description: "快速功能验证测试"
+    models: ["deepseek-r1-distill-qwen-32b-aliyun"]
+    documents: 3
+    repetitions: 1
+    max_duration_minutes: 10
+    
+  # 标准测试预设  
+  standard_test:
+    type: "standard"
+    description: "标准功能完整测试"
+    models: 
+      - "deepseek-r1-distill-qwen-32b-aliyun"
+      - "qwen-max"
+    documents: 10
+    repetitions: 3
+    max_duration_minutes: 60
+    
+  # 完整测试预设
+  full_test:
+    type: "full"
+    description: "完整多模型对比测试"
+    models: 
+      - "deepseek-r1-distill-qwen-32b-aliyun"
+      - "deepseek-r1-distill-qwen-14b-aliyun"
+      - "deepseek-r1-distill-qwen-7b-aliyun"
+      - "qwen-max"
+      - "gpt-3.5-turbo-openrouter"
+    documents: 30
+    repetitions: 3
+    max_duration_minutes: 180
+    
+  # 性能测试预设
+  performance_test:
+    type: "performance"
+    description: "模型性能基准测试"
+    models:
+      - "deepseek-r1-distill-qwen-32b-aliyun"
+      - "deepseek-v3-official"
+      - "qwen-max"
+    documents: 50
+    repetitions: 5
+    max_duration_minutes: 300
+    collect_performance_metrics: true
+    
+  # 稳定性测试预设
+  stability_test:
+    type: "stability"
+    description: "模型稳定性压力测试"
+    models: ["deepseek-r1-distill-qwen-32b-aliyun"]
+    documents: 20
+    repetitions: 10
+    max_duration_minutes: 120
+    stress_testing: true
+
+# 模型分组配置
+model_groups:
+  # 可靠模型组
+  reliable_models:
+    description: "经过验证的可靠模型"
+    models:
+      - "deepseek-r1-distill-qwen-32b-aliyun"
+      - "qwen-max"
+    priority: "high"
+    
+  # 实验模型组
+  experimental_models:
+    description: "实验性模型"
+    models:
+      - "deepseek-v3-official"
+      - "qwq-32b-preview"
+    priority: "medium"
+    
+  # 基准模型组
+  baseline_models:
+    description: "基准对比模型"
+    models:
+      - "gpt-3.5-turbo-openrouter"
+      - "gpt-4o-mini-openrouter"
+    priority: "low"
+    
+  # DeepSeek系列
+  deepseek_series:
+    description: "DeepSeek模型系列"
+    models:
+      - "deepseek-r1-distill-qwen-32b-aliyun"
+      - "deepseek-r1-distill-qwen-14b-aliyun" 
+      - "deepseek-r1-distill-qwen-7b-aliyun"
+      - "deepseek-v3-official"
+    provider: "mixed"
+    
+  # Qwen系列
+  qwen_series:
+    description: "通义千问模型系列"
+    models:
+      - "qwen-max"
+      - "qwen3-32b"
+      - "qwq-32b-preview"
+    provider: "aliyun-bailian"
+
+# 实验执行配置
+execution:
+  # 并行处理
+  parallel_execution: true
+  max_parallel_documents: 5
+  max_parallel_models: 3
+  
+  # 超时控制
+  timeout:
+    single_document_timeout: 300  # 秒
+    model_total_timeout: 3600     # 秒
+    experiment_total_timeout: 7200 # 秒
+    
+  # 错误处理
+  error_handling:
+    continue_on_error: true
+    max_consecutive_failures: 5
+    retry_failed_documents: true
+    save_partial_results: true
+    
+  # 进度跟踪
+  progress_tracking:
+    show_progress_bar: true
+    log_progress_interval: 10  # 秒
+    save_checkpoint_interval: 60  # 秒
+    
+  # 资源管理
+  resource_limits:
+    max_memory_mb: 4096
+    max_cpu_percent: 80
+    temp_storage_limit_gb: 10
+
+# 评估配置
+evaluation:
+  # 自动评估
+  auto_evaluation: true
+  
+  # 评估指标
+  metrics:
+    # 6指标评估
+    six_metrics:
+      enabled: true
+      ground_truth_required: true
+      tokenizer_required: true
+      
+    # 性能指标
+    performance_metrics:
+      enabled: true
+      include_latency: true
+      include_throughput: true
+      include_resource_usage: true
+      
+    # 质量指标
+    quality_metrics:
+      enabled: true
+      include_consistency: true
+      include_accuracy: true
+      include_completeness: true
+  
+  # 评估阈值
+  thresholds:
+    extraction_recall_min: 0.8
+    location_recall_min: 0.7
+    coordinate_success_rate_min: 0.6
+    processing_stability_min: 0.8
+    efficiency_coefficient_max: 15.0
+    
+  # 统计分析
+  statistical_analysis:
+    confidence_interval: 0.95
+    significance_level: 0.05
+    outlier_detection: true
+    correlation_analysis: true
+
+# 结果分析配置
+result_analysis:
+  # 自动分析
+  auto_analysis: true
+  
+  # 分析类型
+  analysis_types:
+    - "model_comparison"
+    - "performance_trends"
+    - "error_analysis"
+    - "statistical_summary"
+    - "quality_assessment"
+    
+  # 报告生成
+  report_generation:
+    generate_summary_report: true
+    generate_detailed_report: false
+    generate_charts: true
+    report_formats: ["json", "html"]
+    
+  # 可视化
+  visualization:
+    enabled: false
+    chart_types: ["bar", "line", "scatter", "box"]
+    save_charts: false
+    chart_format: "png"
+
+# 实验监控配置
+monitoring:
+  # 实时监控
+  real_time_monitoring: true
+  
+  # 监控指标
+  monitor_metrics:
+    - "processing_speed"
+    - "error_rate"  
+    - "memory_usage"
+    - "api_latency"
+    - "success_rate"
+    
+  # 告警配置
+  alerts:
+    enabled: false
+    error_rate_threshold: 0.3
+    memory_usage_threshold: 0.9
+    processing_time_threshold: 600
+    
+  # 监控输出
+  monitoring_output:
+    log_to_file: true
+    log_file: "experiment_monitoring.log"
+    console_output: true
+    update_interval: 30  # 秒
+
+# 实验记录配置
+logging:
+  # 详细日志
+  detailed_logging: true
+  log_level: "INFO"
+  
+  # 日志内容
+  log_content:
+    log_start_end: true
+    log_model_switches: true
+    log_document_processing: true
+    log_errors: true
+    log_performance: true
+    
+  # 日志格式
+  log_format:
+    timestamp: true
+    experiment_id: true
+    model_name: true
+    document_name: true
+    
+  # 日志输出
+  log_output:
+    console: true
+    file: true
+    file_path: "experiment.log"
+    rotation: true
+    max_file_size: "10MB"
+    backup_count: 5
