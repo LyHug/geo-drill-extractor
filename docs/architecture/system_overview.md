@@ -330,6 +330,5 @@ def llm_call(...):
 
 📖 **相关文档**:
 - [模块详细设计](./module_design.md) - 各模块的详细设计文档
-- [重构历程](./refactoring_history.md) - 7阶段重构的完整记录
 - [数据流分析](./data_flow.md) - 深入的数据流分析
 - [性能优化指南](../developer/performance_optimization.md) - 系统性能优化建议

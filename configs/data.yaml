@@ -7,7 +7,6 @@ paths:
   documents_dir: './simplified_system/documents'
   survey_points_file: './simplified_system/data/导线点.csv'
   ground_truth_file: './simplified_system/data/ground_truth_annotations.csv'
-  verification_file: './simplified_system/data/coordinate_verification_results.csv'
   
   # 输出数据路径
   output_dir: './simplified_system/output'
@@ -38,11 +37,6 @@ data_sources:
     encoding: 'utf-8-sig'
     required_columns: ['文档名称', '钻孔数量', '坐标成功数']
     
-  # 验证数据配置
-  verification:
-    file_format: 'csv'
-    encoding: 'utf-8-sig'
-    required_columns: ['文档名称', '钻孔编号', '验证X', '验证Y', '验证Z']
 
 # 数据验证规则
 validation:

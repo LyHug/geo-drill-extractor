@@ -1,11 +1,11 @@
 # 钻孔实体提取系统主配置文件
-# Stage 7 重构版本 - 模块化配置管理
+# 模块化配置管理
 
 # 系统信息
 system:
   name: "KG钻孔实体提取系统"
   version: "2.0.0"
-  stage: "Stage 7 - 配置和文档重构"
+  stage: "生产版本"
   refactor_date: "2025-09-04"
 
 # 配置文件引用
@@ -27,7 +27,6 @@ data:
   documents_dir: "./documents"
   survey_points_file: "./data/导线点.csv"
   ground_truth_file: "./data/ground_truth_annotations.csv"
-  verification_file: "./data/coordinate_verification_results.csv"
   output_dir: "./output"
 
 # LLM基础配置
@@ -38,11 +37,11 @@ llm:
   timeout: 60
   retry_times: 3
   
-  # API密钥配置
+  # API密钥配置 - 使用环境变量
   api_keys:
-    deepseek-official: "sk-6dfcbcb8058541758df6c661a2907185"
-    aliyun-bailian: "sk-2da02278bd9c483ab8d43084788501b4"
-    openrouter: "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"
+    deepseek-official: "${DEEPSEEK_API_KEY}"
+    aliyun-bailian: "${ALIYUN_API_KEY}"
+    openrouter: "${OPENROUTER_API_KEY}"
 
 # 处理配置
 processing:
@@ -79,7 +78,7 @@ logging:
 
 # 配置加载说明
 config_notes: |
-  这是Stage 7重构后的主配置文件。
+  这是系统的主配置文件。
   
   配置加载优先级：
   1. 专门配置文件（configs/*.yaml）- 最高优先级

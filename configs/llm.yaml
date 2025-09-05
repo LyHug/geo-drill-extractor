@@ -8,11 +8,11 @@ max_tokens: 8192
 timeout: 60
 retry_times: 3
 
-# API密钥配置 - 支持环境变量替换
+# API密钥配置 - 使用环境变量（安全起见，不在配置文件中存储真实密钥）
 api_keys:
-  deepseek-official: "sk-6dfcbcb8058541758df6c661a2907185"
-  aliyun-bailian: "sk-2da02278bd9c483ab8d43084788501b4"
-  openrouter: "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"
+  deepseek-official: "${DEEPSEEK_API_KEY}"
+  aliyun-bailian: "${ALIYUN_API_KEY}" 
+  openrouter: "${OPENROUTER_API_KEY}"
 
 # 各模型的特定配置
 models:

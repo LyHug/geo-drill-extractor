@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Dict, Optional, List
 from dataclasses import dataclass
 
-from ..core import GroundTruthData, VerificationData
+from ..core import GroundTruthData
 from ..core.exceptions import (
     DataException,
     ValidationException
@@ -36,27 +36,22 @@ class GroundTruthLoader:
     
     def __init__(
         self, 
-        annotations_file: Optional[str] = None,
-        verification_file: Optional[str] = None
+        annotations_file: Optional[str] = None
     ):
         """
         初始化真值数据加载器
         
         Args:
             annotations_file: 基础标注文件路径
-            verification_file: 坐标验证文件路径（可选）
         """
         # 设置默认路径
         self.annotations_file = Path(annotations_file) if annotations_file else Path('./data/ground_truth_annotations.csv')
-        self.verification_file = Path(verification_file) if verification_file else Path('./data/coordinate_verification_results.csv')
         
         # 数据存储
         self.annotations: Dict[str, GroundTruthData] = {}
-        self.verifications: Dict[str, List[VerificationData]] = {}
         
         # 加载数据
         self._load_annotations()
-        self._load_verifications()
     
     def _load_annotations(self):
         """加载基础标注数据"""
@@ -109,42 +104,6 @@ class GroundTruthLoader:
                 details={'file': str(self.annotations_file)}
             )
     
-    def _load_verifications(self):
-        """加载坐标验证数据"""
-        if not self.verification_file.exists():
-            logger.info(f"坐标验证文件不存在: {self.verification_file}")
-            return
-        
-        try:
-            df = pd.read_csv(self.verification_file, encoding='utf-8')
-            
-            # 验证必需列
-            required_columns = ['document_filename', 'model_name', 'repetition_round', 'manually_verified_correct_coordinates_count']
-            missing_columns = [col for col in required_columns if col not in df.columns]
-            
-            if missing_columns:
-                logger.warning(f"坐标验证文件缺少列: {missing_columns}")
-                return
-            
-            # 按文档分组
-            for _, row in df.iterrows():
-                doc_name = row['document_filename']
-                
-                verification = VerificationData(
-                    document_filename=doc_name,
-                    model_name=row['model_name'],
-                    repetition_round=int(row['repetition_round']),
-                    manually_verified_correct_coordinates_count=int(row['manually_verified_correct_coordinates_count'])
-                )
-                
-                if doc_name not in self.verifications:
-                    self.verifications[doc_name] = []
-                self.verifications[doc_name].append(verification)
-            
-            logger.info(f"成功加载 {len(self.verifications)} 个文档的坐标验证数据")
-            
-        except Exception as e:
-            logger.error(f"加载坐标验证数据失败: {str(e)}")
     
     def get_annotation(self, document_filename: str) -> Optional[GroundTruthData]:
         """
@@ -158,33 +117,6 @@ class GroundTruthLoader:
         """
         return self.annotations.get(document_filename)
     
-    def get_verification(
-        self, 
-        document_filename: str, 
-        model_name: Optional[str] = None,
-        repetition_round: Optional[int] = None
-    ) -> List[VerificationData]:
-        """
-        获取文档的验证数据
-        
-        Args:
-            document_filename: 文档文件名
-            model_name: 模型名称（可选）
-            repetition_round: 重复轮次（可选）
-        
-        Returns:
-            验证数据列表
-        """
-        verifications = self.verifications.get(document_filename, [])
-        
-        # 过滤条件
-        if model_name:
-            verifications = [v for v in verifications if v.model_name == model_name]
-        
-        if repetition_round is not None:
-            verifications = [v for v in verifications if v.repetition_round == repetition_round]
-        
-        return verifications
     
     def load_ground_truth(self) -> Dict[str, GroundTruthData]:
         """

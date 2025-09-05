@@ -23,7 +23,6 @@
   - [`系统架构概述`](./architecture/system_overview.md)
   - [`模块设计`](./architecture/module_design.md)
   - [`数据流`](./architecture/data_flow.md)
-  - [`重构历程`](./architecture/refactoring_history.md)
 
 ### API文档
 - [`api/`](./api/) - API参考文档
@@ -50,10 +49,9 @@
 
 ## 📖 重要文档
 
-### Stage 7 重构文档
-- [重构历程](./architecture/refactoring_history.md) - 详细的7阶段重构过程
-- [配置系统重构](./user_guide/configuration.md) - 新的模块化配置系统
-- [模块架构](./architecture/module_design.md) - 重构后的模块设计
+### 系统架构文档
+- [配置系统指南](./user_guide/configuration.md) - 模块化配置系统
+- [模块架构](./architecture/module_design.md) - 系统模块设计
 
 ### 核心功能文档
 - [6指标评估系统](./architecture/evaluation_system.md) - 详细的评估指标说明
@@ -83,7 +81,6 @@
 ## 📝 更新日志
 
 - [版本更新记录](./CHANGELOG.md) - 系统版本变更历史
-- [Stage 7完成报告](../STAGE_7_COMPLETION.md) - 最新重构完成情况
 
 ---
 

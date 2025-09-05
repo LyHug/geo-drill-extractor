@@ -306,7 +306,6 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
                 'survey_points_file': str(project_root / data_config.get('survey_points_file', 'data/导线点.csv').lstrip('./')),
                 'output_dir': str(project_root / data_config.get('output_dir', 'output').lstrip('./')),
                 'ground_truth_file': str(project_root / data_config.get('ground_truth_file', 'data/ground_truth_annotations.csv').lstrip('./')),
-                'verification_file': str(project_root / data_config.get('verification_file', 'data/coordinate_verification_results.csv').lstrip('./'))
             }
         else:
             # 使用传统的相对路径（向后兼容）
@@ -315,7 +314,6 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
                 'survey_points_file': data_config.get('survey_points_file', './data/导线点.csv'),
                 'output_dir': data_config.get('output_dir', './output'),
                 'ground_truth_file': data_config.get('ground_truth_file', './data/ground_truth_annotations.csv'),
-                'verification_file': data_config.get('verification_file', './data/coordinate_verification_results.csv')
             }
 
     # 通用配置访问

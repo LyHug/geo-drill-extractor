@@ -44,6 +44,17 @@ pip install openai python-docx pandas numpy transformers PyYAML
 
 ### 配置API密钥
 
+**方式一：环境变量配置（推荐）**
+
+复制 `.env.example` 为 `.env` 并填入真实API密钥：
+
+```bash
+cp .env.example .env
+# 编辑 .env 文件，填入你的API密钥
+```
+
+**方式二：直接修改配置文件**
+
 在 `configs/llm.yaml` 中配置你的API密钥：
 
 ```yaml
