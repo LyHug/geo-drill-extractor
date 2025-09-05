@@ -46,12 +46,15 @@ pip install openai python-docx pandas numpy transformers PyYAML
 
 **方式一：环境变量配置（推荐）**
 
-复制 `.env.example` 为 `.env` 并填入真实API密钥：
+在项目根目录下，复制 `.env.example` 为 `.env` 并填入真实API密钥：
 
 ```bash
+# 在项目根目录 (simplified_system/) 下执行：
 cp .env.example .env
-# 编辑 .env 文件，填入你的API密钥
+# 编辑根目录下的 .env 文件，填入你的API密钥
 ```
+
+⚠️ **注意**：`.env` 文件应放在项目根目录 (`simplified_system/`) 下，与 `run_full_test.py` 同级。
 
 **方式二：直接修改配置文件**
 

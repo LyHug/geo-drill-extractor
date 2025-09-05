@@ -9,6 +9,13 @@ from typing import Dict, Any, Optional, List
 from threading import Lock
 from datetime import datetime
 
+# 尝试导入python-dotenv，如果没有安装则跳过
+try:
+    from dotenv import load_dotenv
+    DOTENV_AVAILABLE = True
+except ImportError:
+    DOTENV_AVAILABLE = False
+
 
 class ConfigLoaderMeta(type):
     """线程安全的单例元类"""
@@ -50,6 +57,9 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
         self._config = None
         self._last_modified = None
         self._initialized = True
+
+        # 加载.env文件（如果存在且python-dotenv可用）
+        self._load_env_file()
 
         # 初始化加载配置
         self._load_config()
@@ -102,6 +112,37 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
             pass
             
         return None
+
+    def _load_env_file(self):
+        """加载.env文件（如果存在且python-dotenv可用）"""
+        if not DOTENV_AVAILABLE:
+            return
+        
+        # 查找.env文件的位置
+        env_paths = []
+        
+        # 1. 与配置文件同目录
+        if self.config_path.parent.exists():
+            env_paths.append(self.config_path.parent / '.env')
+        
+        # 2. 项目根目录（相对于configs目录的上级）
+        if self.config_path.parent.name == 'configs':
+            project_root = self.config_path.parent.parent
+            env_paths.append(project_root / '.env')
+        
+        # 3. 当前工作目录
+        env_paths.append(Path.cwd() / '.env')
+        
+        # 尝试加载第一个找到的.env文件
+        for env_path in env_paths:
+            if env_path.exists():
+                try:
+                    load_dotenv(env_path)
+                    print(f"已加载环境变量文件: {env_path}")
+                    break
+                except Exception as e:
+                    print(f"加载.env文件失败 {env_path}: {e}")
+                    continue
 
     def _load_config(self) -> Dict[str, Any]:
         """加载配置文件"""
