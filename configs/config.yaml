@@ -3,7 +3,7 @@
 
 # 系统信息
 system:
-  name: "KG钻孔实体提取系统"
+  name: "Geo Drill Extractor"
   version: "2.0.0"
   stage: "生产版本"
   refactor_date: "2025-09-04"
@@ -59,7 +59,7 @@ processing:
 
 # 实验配置
 experiment:
-  output_dir: "simplified_system/experiment_results"
+  output_dir: "experiment_results"
   test_documents: 20
   default_models:
     - 'deepseek-r1-distill-qwen-32b-aliyun'

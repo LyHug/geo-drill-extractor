@@ -33,7 +33,7 @@ text_processing:
     preserve_tables: true
     preserve_formatting: true
     extract_images: false
-    image_extraction_path: './simplified_system/temp/images'
+    image_extraction_path: './temp/images'
     
   # 文本预处理
   preprocessing:
@@ -55,7 +55,7 @@ cache:
   # 磁盘缓存
   disk_cache:
     enabled: false
-    cache_dir: './simplified_system/cache'
+    cache_dir: './cache'
     max_size_gb: 1.0
     ttl: 86400  # 24小时
     

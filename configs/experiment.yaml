@@ -13,7 +13,7 @@ basic:
     - 'gpt-3.5-turbo-openrouter'
   
   # 输出目录配置
-  output_dir: './simplified_system/experiment_results'
+  output_dir: './experiment_results'
   backup_results: true
   save_intermediate_results: true
 

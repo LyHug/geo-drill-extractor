@@ -11,7 +11,7 @@ basic:
   date_format: "%Y-%m-%d %H:%M:%S"
   
   # 日志输出目录
-  log_dir: "./simplified_system/logs"
+  log_dir: "./logs"
   
   # 编码设置
   encoding: "utf-8"
@@ -228,7 +228,7 @@ cleanup:
   # 归档选项
   archive_before_delete: true
   archive_format: "tar.gz"
-  archive_location: "./simplified_system/logs/archive"
+  archive_location: "./logs/archive"
 
 # 日志监控配置  
 monitoring:

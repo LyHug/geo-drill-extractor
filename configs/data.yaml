@@ -4,16 +4,16 @@
 # 数据路径配置
 paths:
   # 输入数据路径
-  documents_dir: './simplified_system/documents'
-  survey_points_file: './simplified_system/data/导线点.csv'
-  ground_truth_file: './simplified_system/data/ground_truth_annotations.csv'
+  documents_dir: './documents'
+  survey_points_file: './data/导线点.csv'
+  ground_truth_file: './data/ground_truth_annotations.csv'
   
   # 输出数据路径
-  output_dir: './simplified_system/output'
-  experiment_output_dir: './simplified_system/experiment_results'
+  output_dir: './output'
+  experiment_output_dir: './experiment_results'
   
   # 日志路径
-  log_dir: './simplified_system/logs'
+  log_dir: './logs'
 
 # 数据源配置
 data_sources:
@@ -127,7 +127,7 @@ transformation:
 # 数据备份配置
 backup:
   enabled: true
-  backup_dir: './simplified_system/backup'
+  backup_dir: './backup'
   retention_days: 30
   backup_schedule: 'daily'  # daily, weekly, monthly
   compress: true

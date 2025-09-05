@@ -1,5 +1,5 @@
 """
-KG钻孔实体提取系统 - 主包初始化
+Geo Drill Extractor - 主包初始化
 
 一个基于LLM的地质钻孔实体提取系统，支持从Word文档中提取钻孔信息并推断空间坐标。
 
@@ -88,8 +88,8 @@ from .experiment import (
 )
 
 __version__ = "0.1.0"
-__author__ = "KG Research Team"
-__email__ = "team@kg-research.com"
+__author__ = "Geo Research Team"
+__email__ = "team@geo-research.com"
 
 __all__ = [
     # 核心数据模型

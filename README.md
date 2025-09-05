@@ -40,7 +40,7 @@ The following 7 models were evaluated in our paper:
 - **DeepSeek R1 Distilled-Qwen-14B** 
 - **DeepSeek R1 Distilled-Qwen-32B**
 - **Qwen2.5-Max**
-- **QWQ-32B** (Reasoning model)
+- **QWQ** (Reasoning model)
 
 ### OpenRouter Platform
 - **GPT-3.5-Turbo**
