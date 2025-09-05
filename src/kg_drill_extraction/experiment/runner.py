@@ -75,8 +75,7 @@ class ExperimentRunner:
         
         # 初始化组件 - 使用配置的路径
         self.ground_truth_loader = GroundTruthLoader(
-            annotations_file=data_paths['ground_truth_file'],
-            verification_file=data_paths['verification_file']
+            annotations_file=data_paths['ground_truth_file']
         )
         self.metrics_processor = SixMetricsProcessor(self.ground_truth_loader)
         self.tokenizer_manager = get_tokenizer_manager()

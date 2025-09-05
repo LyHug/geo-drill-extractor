@@ -1,161 +1,75 @@
 # Geo Drill Extractor
 
-🚀 **地质钻孔实体提取系统** - 使用大语言模型从地质勘探报告中提取结构化信息并推断坐标位置
+This code is from our paper "LLM-Powered Data Automation for 3D Geological Model Updating: Uncovering Architectural Divergence and the Efficiency-Effectiveness Paradox"
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+## Overview
 
-## ✨ 核心特性
+An AI-powered system that automatically extracts structured drill hole information from geological exploration reports (Word documents) and infers spatial coordinates using Large Language Models (LLMs). The system was evaluated on 7 state-of-the-art models with comprehensive performance analysis.
 
-- 🤖 **多模型支持**: 支持10+大语言模型，包括DeepSeek R1、QWQ-32B、Qwen系列、GPT系列
-- 📄 **文档处理**: 自动解析Word文档(.docx)，保留表格结构
-- 🎯 **智能提取**: 区分设计参数和实际施工参数的结构化提取
-- 🗺️ **坐标推断**: 基于自然语言描述和测量点进行空间推理
-- 📊 **6指标评估**: 全面的性能评估框架
-- 🔄 **流式处理**: 支持实时流式输出显示
-- ⚙️ **模块化架构**: 现代化Python包结构，易于扩展
+## Main Steps to Run the Code
 
-## 🏗️ 架构概览
+1. **Environment Setup**
+   - Install Python 3.10+ and required dependencies: `pip install -r requirements.txt`
+   - Copy `.env.example` to `.env` and configure your API keys
 
-```
-geo-drill-extractor/
-├── 🚀 run_full_test.py           # 生产级完整测试脚本
-├── 🧪 new_experiment.py          # 灵活实验工具
-├── 📁 src/kg_drill_extraction/   # 核心Python包
-│   ├── core/                     # 核心模型和配置
-│   ├── llm/                      # LLM集成层
-│   ├── extraction/               # 提取管道
-│   ├── evaluation/               # 评估系统
-│   └── experiment/               # 实验执行器
-├── 📁 configs/                   # 模块化配置文件
-├── 📁 tests/                     # 测试系统
-├── 📁 documents/                 # 待处理文档
-├── 📁 data/                      # 标注数据和测量点
-└── 📁 experiment_results/        # 实验输出结果
-```
+2. **Data Preparation**
+   - Place your geological exploration reports (.docx) in the `documents/` directory
+   - Add survey control points data to `data/导线点.csv`
+   - Prepare ground truth annotations in `data/ground_truth_annotations.csv`
 
-## 🚀 快速开始
+3. **Configuration**
+   - Set the model configurations in `configs/llm.yaml` 
+   - Configure data paths and processing parameters in `configs/config.yaml`
 
-### 安装依赖
+4. **Run Extraction**
+   - For full evaluation (paper reproduction): `python run_full_test.py`
+   - For quick testing: `python new_experiment.py --type quick --documents 3`
+   - For custom experiments: `python new_experiment.py --type custom --models deepseek-r1-distill-qwen-32b-aliyun --documents 10`
 
-```bash
-pip install openai python-docx pandas numpy transformers PyYAML
-```
+5. **Results Analysis**
+   - Check results in `experiment_results/` directory
+   - Review 6-metric evaluation: extraction recall, location recall, coordinate success rate, processing stability, efficiency coefficient, and processing time
+   - Export formats: CSV, Excel (multi-sheet), and JSON
 
-### 配置API密钥
+## Tested Models (Paper Configuration)
 
-**方式一：环境变量配置（推荐）**
+The following 7 models were evaluated in our paper:
 
-在项目根目录下，复制 `.env.example` 为 `.env` 并填入真实API密钥：
+### Aliyun Bailian Platform
+- **DeepSeek R1 Distilled-Qwen-7B**
+- **DeepSeek R1 Distilled-Qwen-14B** 
+- **DeepSeek R1 Distilled-Qwen-32B**
+- **Qwen-Max**
+- **QWQ-32B** (Reasoning model)
 
-```bash
-# 在项目根目录 (simplified_system/) 下执行：
-cp .env.example .env
-# 编辑根目录下的 .env 文件，填入你的API密钥
-```
+### OpenRouter Platform
+- **GPT-3.5-Turbo**
+- **GPT-4o-Mini**
 
-⚠️ **注意**：`.env` 文件应放在项目根目录 (`simplified_system/`) 下，与 `run_full_test.py` 同级。
+## Key Features
 
-**方式二：直接修改配置文件**
+- **Multi-model LLM Integration**: Comprehensive evaluation across 7 cutting-edge language models
+- **Intelligent Document Processing**: Converts Word documents to structured data while preserving tables
+- **Spatial Coordinate Inference**: AI-powered spatial reasoning to calculate drill hole coordinates from natural language descriptions
+- **6-Metric Evaluation System**: Comprehensive evaluation framework measuring accuracy, consistency, and efficiency
+- **Batch Processing**: Parallel processing with configurable concurrency (7 models × 30 documents × 3 repetitions)
+- **Modular Architecture**: Clean, extensible codebase with comprehensive configuration system
 
-在 `configs/llm.yaml` 中配置你的API密钥：
+## Paper Experimental Setup
 
-```yaml
-api_keys:
-  aliyun-bailian: "your_aliyun_api_key"
-  deepseek-official: "your_deepseek_api_key" 
-  openrouter: "your_openrouter_api_key"
-```
+- **Models**: 7 state-of-the-art LLMs 
+- **Documents**: 30 geological exploration reports
+- **Repetitions**: 3 rounds per model-document pair
+- **Total Runs**: 630 individual extractions
+- **Evaluation Metrics**: 6-dimensional performance assessment
 
-### 运行测试
+## System Requirements
 
-```bash
-# 生产级完整测试
-python run_full_test.py
+- Python 3.10+
+- Windows/Linux/macOS
+- API access to Aliyun Bailian and OpenRouter platforms
+- Minimum 8GB RAM for processing large document sets
 
-# 快速功能验证
-python new_experiment.py --type quick --documents 3
+## License
 
-# 自定义实验
-python new_experiment.py --type custom --models qwq-32b --documents 10 --repetitions 2
-```
-
-## 🤖 支持的模型
-
-### 阿里云百炼平台
-- QWQ-32B-Preview (推理模型)
-- Qwen-Max
-- Qwen3-14B/32B  
-- DeepSeek R1蒸馏版 (7B/14B/32B)
-
-### DeepSeek官方
-- DeepSeek V3
-- DeepSeek R1
-
-### OpenRouter
-- GPT-3.5-Turbo
-- GPT-4o-Mini
-
-## 📊 评估指标
-
-系统提供6项核心指标：
-
-1. **提取召回率** - 实体检测准确性
-2. **位置召回率** - 位置描述提取准确性  
-3. **坐标成功率** - 空间推理准确性
-4. **处理稳定性** - 跨轮次一致性
-5. **效率系数** - Token使用优化
-6. **平均位置处理时间** - 性能指标
-
-## 🔧 配置系统
-
-支持模块化配置管理：
-
-- `configs/config.yaml` - 主配置文件
-- `configs/llm.yaml` - LLM模型配置
-- `configs/data.yaml` - 数据路径配置
-- `configs/processing.yaml` - 处理配置
-- `configs/experiment.yaml` - 实验预设
-
-## 🧪 实验功能
-
-### 完整测试
-```bash
-python run_full_test.py  # 7个模型 × 30个文档 × 3轮重复
-```
-
-### 灵活实验
-```bash
-# 快速测试
-python new_experiment.py --type quick
-
-# 完整实验  
-python new_experiment.py --type full
-
-# 自定义实验
-python new_experiment.py --type custom --models deepseek-v3 qwq-32b --documents 20
-```
-
-## 📈 结果输出
-
-实验结果保存到 `experiment_results/YYYY-MM-DD_HH-MM-SS/`:
-
-- `experiment_results.json` - 完整实验数据
-- `metrics_results.json` - 评估指标
-- `raw_results.json` - 原始处理结果
-
-## 🤝 贡献
-
-欢迎提交Issue和Pull Request！
-
-## 📄 许可证
-
-本项目采用 [MIT许可证](LICENSE)
-
-## 🙏 致谢
-
-感谢以下技术和平台的支持：
-- 阿里云百炼平台
-- DeepSeek
-- OpenRouter
-- OpenAI API标准
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
