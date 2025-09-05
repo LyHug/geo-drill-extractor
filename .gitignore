@@ -142,7 +142,7 @@ data/*
 
 # Claude Code specific files
 CLAUDE.md
-README_private.md
+README_PRIVATE.md
 
 # Environment variables and secrets
 .env
