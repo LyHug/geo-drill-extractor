@@ -8,8 +8,8 @@ from pathlib import Path
 from typing import Dict, Optional, List
 from dataclasses import dataclass
 
-from ..core import GroundTruthData
-from ..core.exceptions import (
+from core import GroundTruthData
+from core.exceptions import (
     DataException,
     ValidationException
 )

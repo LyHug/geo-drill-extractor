@@ -17,14 +17,14 @@ if requirements_file.exists():
         requirements = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
 setup(
-    name="kg-drill-extraction",
+    name="geo-drill-extractor",
     version="0.1.0",
     author="KG Team",
     author_email="kg@example.com",
     description="地质钻孔实体提取与坐标推理系统",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/kg-team/kg-drill-extraction",
+    url="https://github.com/LyHug/geo-drill-extractor",
     packages=find_packages(where="src"),
     package_dir={"": "src"},
     classifiers=[
@@ -54,18 +54,6 @@ setup(
             "sphinx-autodoc-typehints>=1.23.0",
         ],
     },
-    entry_points={
-        "console_scripts": [
-            "kg-extract=kg_drill_extraction.cli:main",
-            "kg-experiment=kg_drill_extraction.experiment.runner:main",
-        ],
-    },
     include_package_data=True,
-    package_data={
-        "kg_drill_extraction": [
-            "configs/*.yaml",
-            "data/*.csv",
-        ],
-    },
     zip_safe=False,
 )

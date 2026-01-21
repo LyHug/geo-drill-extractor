@@ -7,8 +7,8 @@ from typing import Dict, List, Optional, Any, Generator
 import logging
 from dataclasses import dataclass
 
-from ..core import LLMModel
-from ..core.exceptions import LLMException, LLMTimeoutException, LLMAPIException
+from core import LLMModel
+from core.exceptions import LLMException, LLMTimeoutException, LLMAPIException
 
 logger = logging.getLogger(__name__)
 

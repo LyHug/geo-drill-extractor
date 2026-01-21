@@ -17,8 +17,8 @@ from datetime import datetime
 src_path = Path(__file__).parent / "src"
 sys.path.insert(0, str(src_path))
 
-from kg_drill_extraction.experiment import ExperimentRunner
-from kg_drill_extraction.core import LLMModel
+from experiment import ExperimentRunner
+from core import LLMModel
 
 
 
@@ -80,13 +80,8 @@ def main():
         print(f"🤖 模型数: {len(metadata.get('models', []))}")
 
         # 显示输出目录
-        raw_results = results.get('raw_results', {})
-        if raw_results:
-            for model_data in raw_results.values():
-                if isinstance(model_data, dict) and 'output_dir' in model_data:
-                    output_dir = Path(model_data['output_dir']).parent
-                    print(f"📁 结果: {output_dir}")
-                    break
+        if getattr(runner, "current_experiment_dir", None):
+            print(f"📁 结果: {runner.current_experiment_dir}")
 
         if success_rate >= 90:
             print("✅ 测试成功！")

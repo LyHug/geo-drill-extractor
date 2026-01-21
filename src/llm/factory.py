@@ -9,8 +9,8 @@ from .base import BaseLLMClient, LLMConfig
 from .openrouter import OpenRouterClient
 from .deepseek import DeepSeekClient
 from .aliyun import AliyunClient
-from ..core import LLMModel, get_config_loader
-from ..core.exceptions import InvalidModelException, ConfigException
+from core import LLMModel, get_config_loader
+from core.exceptions import InvalidModelException, ConfigException
 
 logger = logging.getLogger(__name__)
 

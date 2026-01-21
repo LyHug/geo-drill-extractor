@@ -46,7 +46,7 @@ class SystemChecker:
     
     def check_core_imports(self) -> bool:
         """检查核心模块导入"""
-        from kg_drill_extraction.core import (
+        from core import (
             LLMModel,
             DrillHoleEntity,
             Coordinate,
@@ -58,12 +58,12 @@ class SystemChecker:
     
     def check_extraction_imports(self) -> bool:
         """检查提取模块导入"""
-        from kg_drill_extraction.extraction import ExtractionPipeline
+        from extraction import ExtractionPipeline
         return True
     
     def check_evaluation_imports(self) -> bool:
         """检查评估模块导入"""
-        from kg_drill_extraction.evaluation import (
+        from evaluation import (
             SixMetricsProcessor,
             GroundTruthLoader,
             TokenizerManager,
@@ -73,7 +73,7 @@ class SystemChecker:
     
     def check_experiment_imports(self) -> bool:
         """检查实验模块导入"""
-        from kg_drill_extraction.experiment import (
+        from experiment import (
             ExperimentRunner,
             run_quick_experiment,
             run_full_experiment,
@@ -82,27 +82,29 @@ class SystemChecker:
         return True
     
     def check_main_package_import(self) -> bool:
-        """检查主包导入"""
-        import kg_drill_extraction
-        
-        # 检查主要接口是否存在
-        required_attrs = [
-            'LLMModel',
-            'ExtractionPipeline', 
-            'SixMetricsProcessor',
-            'ExperimentRunner',
-            'run_quick_experiment'
-        ]
-        
-        for attr in required_attrs:
-            if not hasattr(kg_drill_extraction, attr):
-                raise ImportError(f"主包缺少 {attr}")
-        
+        """检查主要模块导入（扁平化 src 后不再有 kg_drill_extraction 包）"""
+        import core
+        import extraction
+        import evaluation
+        import experiment
+
+        required = {
+            core: ['LLMModel', 'get_config_loader'],
+            extraction: ['ExtractionPipeline'],
+            evaluation: ['SixMetricsProcessor'],
+            experiment: ['ExperimentRunner', 'run_quick_experiment'],
+        }
+
+        for module, attrs in required.items():
+            for attr in attrs:
+                if not hasattr(module, attr):
+                    raise ImportError(f"{module.__name__} 缺少 {attr}")
+
         return True
     
     def check_config_system(self) -> bool:
         """检查配置系统"""
-        from kg_drill_extraction.core import get_config_loader
+        from core import get_config_loader
         
         # 测试配置加载器
         loader = get_config_loader()
@@ -121,7 +123,7 @@ class SystemChecker:
     
     def check_llm_models(self) -> bool:
         """检查LLM模型枚举"""
-        from kg_drill_extraction.core import LLMModel
+        from core import LLMModel
         
         # 检查模型数量
         models = list(LLMModel)
@@ -142,7 +144,7 @@ class SystemChecker:
     
     def check_data_models(self) -> bool:
         """检查数据模型"""
-        from kg_drill_extraction.core import (
+        from core import (
             DrillHoleEntity,
             Coordinate,
             ProcessResult,
@@ -170,7 +172,8 @@ class SystemChecker:
     
     def check_pipeline_creation(self) -> bool:
         """检查管道创建"""
-        from kg_drill_extraction import ExtractionPipeline, LLMModel
+        from extraction import ExtractionPipeline
+        from core import LLMModel
         
         pipeline = ExtractionPipeline(model=LLMModel.DEEPSEEK_R1_DISTILL_QWEN_32B_ALIYUN)
         
@@ -191,7 +194,7 @@ class SystemChecker:
     
     def check_metrics_processor(self) -> bool:
         """检查指标处理器"""
-        from kg_drill_extraction.evaluation import SixMetricsProcessor
+        from evaluation import SixMetricsProcessor
         
         processor = SixMetricsProcessor()
         
@@ -212,7 +215,7 @@ class SystemChecker:
     
     def check_tokenizer_manager(self) -> bool:
         """检查分词器管理器"""
-        from kg_drill_extraction.evaluation import get_tokenizer_manager
+        from evaluation import get_tokenizer_manager
         
         manager = get_tokenizer_manager()
         
@@ -225,7 +228,7 @@ class SystemChecker:
     
     def check_experiment_runner(self) -> bool:
         """检查实验执行器"""
-        from kg_drill_extraction.experiment import ExperimentRunner
+        from experiment import ExperimentRunner
         
         runner = ExperimentRunner()
         
@@ -246,7 +249,7 @@ class SystemChecker:
     
     def check_result_exporter(self) -> bool:
         """检查结果导出器"""
-        from kg_drill_extraction.experiment import ResultExporter
+        from experiment import ResultExporter
         
         exporter = ResultExporter()
         

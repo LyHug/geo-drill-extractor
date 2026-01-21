@@ -1,5 +1,5 @@
 """
-DeepSeek LLM客户端实现
+OpenRouter LLM客户端实现
 """
 
 from typing import Dict, List, Optional, Generator
@@ -7,27 +7,27 @@ import logging
 from openai import OpenAI
 
 from .base import BaseLLMClient, LLMConfig, LLMResponse
-from ..core import LLMModel
-from ..core.exceptions import LLMException
+from core import LLMModel
+from core.exceptions import LLMException, LLMAPIException
 
 logger = logging.getLogger(__name__)
 
 
-class DeepSeekClient(BaseLLMClient):
+class OpenRouterClient(BaseLLMClient):
     """
-    DeepSeek官方API客户端
+    OpenRouter API客户端
     
-    支持DeepSeek V3和R1系列模型
+    支持通过OpenRouter访问多种模型，包括GPT-3.5、GPT-4等
     """
     
     # 模型名称映射
     MODEL_NAME_MAP = {
-        LLMModel.DEEPSEEK_V3_OFFICIAL: "deepseek-chat",
-        LLMModel.DEEPSEEK_R1_OFFICIAL: "deepseek-reasoner",
+        LLMModel.GPT_35_TURBO_OPENROUTER: "openai/gpt-3.5-turbo",
+        LLMModel.GPT_4O_MINI_OPENROUTER: "openai/gpt-4o-mini",
     }
     
     def _initialize(self):
-        """初始化DeepSeek客户端"""
+        """初始化OpenRouter客户端"""
         try:
             if not self.validate_config():
                 raise LLMException(f"Invalid configuration for {self.model.value}")
@@ -37,12 +37,12 @@ class DeepSeekClient(BaseLLMClient):
                 base_url=self.config.base_url,
                 timeout=self.config.timeout
             )
-            logger.info(f"DeepSeek客户端初始化成功: {self.model.value}")
+            logger.info(f"OpenRouter客户端初始化成功: {self.model.value}")
         except Exception as e:
             self.handle_error(e, "初始化客户端失败")
     
     def _get_model_name(self) -> str:
-        """获取DeepSeek的模型名称"""
+        """获取OpenRouter的模型名称"""
         return self.MODEL_NAME_MAP.get(self.model, self.model.value)
     
     def generate(self, prompt: str, **kwargs) -> LLMResponse:
@@ -51,7 +51,7 @@ class DeepSeekClient(BaseLLMClient):
         
         Args:
             prompt: 输入提示词
-            **kwargs: 额外参数
+            **kwargs: 额外参数（temperature、max_tokens等）
         
         Returns:
             LLM响应对象
@@ -61,22 +61,13 @@ class DeepSeekClient(BaseLLMClient):
             temperature = kwargs.get('temperature', self.config.temperature)
             max_tokens = kwargs.get('max_tokens', self.config.max_tokens)
             
-            # 对于DeepSeek R1，可能需要特殊处理
-            messages = [{"role": "user", "content": prompt}]
-            
-            # 如果是reasoner模型，可以添加思考链提示
-            if self.model == LLMModel.DEEPSEEK_R1_OFFICIAL:
-                # R1模型支持推理模式
-                kwargs['reasoning_effort'] = kwargs.get('reasoning_effort', 'medium')
-            
-            # 调用API
+            # 调用OpenAI API
             response = self._client.chat.completions.create(
                 model=self._get_model_name(),
-                messages=messages,
+                messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
-                stream=False,
-                **{k: v for k, v in kwargs.items() if k not in ['temperature', 'max_tokens']}
+                stream=False
             )
             
             # 提取响应内容
@@ -91,16 +82,11 @@ class DeepSeekClient(BaseLLMClient):
                     'total_tokens': response.usage.total_tokens
                 }
             
-            # 对于R1模型，可能有推理过程
-            metadata = {'response_id': response.id if hasattr(response, 'id') else None}
-            if hasattr(response.choices[0], 'reasoning_content'):
-                metadata['reasoning'] = response.choices[0].reasoning_content
-            
             return LLMResponse(
                 content=content,
                 model=self._get_model_name(),
                 usage=usage,
-                metadata=metadata
+                metadata={'response_id': response.id if hasattr(response, 'id') else None}
             )
             
         except Exception as e:
@@ -122,12 +108,10 @@ class DeepSeekClient(BaseLLMClient):
             temperature = kwargs.get('temperature', self.config.temperature)
             max_tokens = kwargs.get('max_tokens', self.config.max_tokens)
             
-            messages = [{"role": "user", "content": prompt}]
-            
             # 创建流式响应
             stream = self._client.chat.completions.create(
                 model=self._get_model_name(),
-                messages=messages,
+                messages=[{"role": "user", "content": prompt}],
                 temperature=temperature,
                 max_tokens=max_tokens,
                 stream=True,
@@ -163,7 +147,7 @@ class DeepSeekClient(BaseLLMClient):
             temperature = kwargs.get('temperature', self.config.temperature)
             max_tokens = kwargs.get('max_tokens', self.config.max_tokens)
             
-            # 调用API
+            # 调用OpenAI API
             response = self._client.chat.completions.create(
                 model=self._get_model_name(),
                 messages=messages,

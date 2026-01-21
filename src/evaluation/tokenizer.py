@@ -6,8 +6,8 @@ import logging
 from typing import Dict, Optional, Any
 from dataclasses import dataclass
 
-from ..core import LLMModel
-from ..core.exceptions import EvaluationException
+from core import LLMModel
+from core.exceptions import EvaluationException
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,14 @@ class TokenizerManager:
                 tokenizer_info.model_id,
                 trust_remote_code=tokenizer_info.trust_remote_code
             )
+
+            # 仅用于 token 计数时，gpt2 的默认 model_max_length=1024 会触发告警。
+            # 这里放宽上限以避免“长度超过最大值”的误导性提示。
+            if tokenizer_info.model_id == "gpt2" and getattr(tokenizer, "model_max_length", None):
+                try:
+                    tokenizer.model_max_length = 10**6
+                except Exception:
+                    pass
             
             # 缓存分词器
             self._tokenizers[model] = tokenizer

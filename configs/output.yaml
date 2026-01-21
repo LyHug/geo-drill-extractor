@@ -426,5 +426,5 @@ post_processing:
   archiving:
     enabled: false
     archive_after_days: 30
-    archive_location: './simplified_system/archive'
+    archive_location: './archive'
     delete_after_archive: false

@@ -10,19 +10,19 @@ from typing import Dict, List, Optional, Any, Union
 from .document_processor import DocumentProcessor
 from .entity_extractor import EntityExtractor
 from .coordinate_inferencer import CoordinateInferencer
-from ..core import (
+from core import (
     LLMModel,
     ProcessResult,
     DrillHoleEntity,
     Coordinate,
     get_config_loader
 )
-from ..core.exceptions import (
+from core.exceptions import (
     ExtractionException,
     DocumentException,
     LLMException
 )
-from ..llm import LLMClientFactory, BaseLLMClient
+from llm import LLMClientFactory, BaseLLMClient
 
 logger = logging.getLogger(__name__)
 

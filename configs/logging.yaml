@@ -103,9 +103,9 @@ debug_log:
   
   # 调试模块
   debug_modules:
-    - "kg_drill_extraction.extraction"
-    - "kg_drill_extraction.llm"
-    - "kg_drill_extraction.evaluation"
+    - "extraction"
+    - "llm"
+    - "evaluation"
     
   # 详细调试信息
   include_details:

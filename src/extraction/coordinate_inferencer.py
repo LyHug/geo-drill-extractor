@@ -10,21 +10,21 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
-from collections import defaultdict
+from collections import defaultdict, Counter
 
 from .prompts import LOCATION_ANALYSIS_PROMPT
-from ..core import (
+from core import (
     DrillHoleEntity,
     Coordinate,
     calculate_drill_hole_endpoint
 )
-from ..core.exceptions import (
+from core.exceptions import (
     CoordinateInferenceException,
     DataException,
     SurveyPointsNotFoundException,
     InvalidSurveyPointsException
 )
-from ..llm import BaseLLMClient
+from llm import BaseLLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +171,9 @@ class CoordinateInferencer:
         
         coordinates = {}
         location_processing_times = []
+        location_analysis_success_count = 0
+        location_analysis_failure_counts: Counter = Counter()
+        start_coordinate_failure_counts: Counter = Counter()
         
         # 按位置描述分组
         location_groups = self._group_by_location(drill_holes)
@@ -185,16 +188,22 @@ class CoordinateInferencer:
                 start_time = time.time()
                 
                 # 分析位置描述
-                location_info = self._analyze_location_with_cache(location_desc)
+                location_info, failure_reason = self._analyze_location_with_cache(location_desc)
                 
                 end_time = time.time()
                 location_processing_times.append(end_time - start_time)
                 
                 # 计算坐标
-                if location_info:
-                    group_coords = self._process_location_group(location_info, holes)
-                    coordinates.update(group_coords)
-                    
+                if not location_info:
+                    location_analysis_failure_counts[failure_reason or 'unknown'] += 1
+                    continue
+
+                location_analysis_success_count += 1
+                group_coords = self._process_location_group(
+                    location_info, holes, start_coordinate_failure_counts
+                )
+                coordinates.update(group_coords)
+                     
             except Exception as e:
                 logger.error(f"推断坐标失败 (位置: {location_desc}): {str(e)}")
                 continue
@@ -204,7 +213,10 @@ class CoordinateInferencer:
             'location_processing_times': location_processing_times,
             'unique_location_descriptions_count': unique_location_count,
             'total_location_processing_time': sum(location_processing_times),
-            'avg_location_processing_time': np.mean(location_processing_times) if location_processing_times else 0
+            'avg_location_processing_time': np.mean(location_processing_times) if location_processing_times else 0,
+            'location_analysis_success_count': location_analysis_success_count,
+            'location_analysis_failure_counts': dict(location_analysis_failure_counts),
+            'start_coordinate_failure_counts': dict(start_coordinate_failure_counts),
         }
         
         return coordinates, timing_stats
@@ -228,7 +240,7 @@ class CoordinateInferencer:
         
         return dict(location_groups)
     
-    def _analyze_location_with_cache(self, location_desc: str) -> Optional[Dict[str, Any]]:
+    def _analyze_location_with_cache(self, location_desc: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         """
         分析位置描述（带缓存）
         
@@ -236,24 +248,24 @@ class CoordinateInferencer:
             location_desc: 位置描述文本
         
         Returns:
-            位置分析结果
+            (位置分析结果, 失败原因)
         """
         # 检查缓存
         if self.enable_cache and self._location_analysis_cache is not None:
             if location_desc in self._location_analysis_cache:
                 logger.debug(f"使用缓存的位置分析结果: {location_desc}")
-                return self._location_analysis_cache[location_desc]
+                return self._location_analysis_cache[location_desc], None
         
         # 调用LLM分析
-        location_info = self._analyze_location_description(location_desc)
+        location_info, failure_reason = self._analyze_location_description(location_desc)
         
         # 更新缓存
-        if self.enable_cache and self._location_analysis_cache is not None:
+        if self.enable_cache and self._location_analysis_cache is not None and location_info is not None:
             self._location_analysis_cache[location_desc] = location_info
         
-        return location_info
+        return location_info, failure_reason
     
-    def _analyze_location_description(self, location_desc: str) -> Optional[Dict[str, Any]]:
+    def _analyze_location_description(self, location_desc: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         """
         使用LLM分析位置描述
         
@@ -261,7 +273,7 @@ class CoordinateInferencer:
             location_desc: 位置描述文本
         
         Returns:
-            分析结果字典
+            (分析结果字典, 失败原因)
         """
         prompt = LOCATION_ANALYSIS_PROMPT.format(location_desc=location_desc)
         
@@ -278,7 +290,7 @@ class CoordinateInferencer:
                 print(f"\n✅ 位置分析完成，响应长度: {len(response_content)}")
                 
                 # 构建响应对象（模拟LLMResponse）
-                from ..llm.base import LLMResponse
+                from llm.base import LLMResponse
                 response = LLMResponse(
                     content=response_content,
                     model=self.llm_client._get_model_name() if hasattr(self.llm_client, '_get_model_name') else 'unknown',
@@ -288,30 +300,49 @@ class CoordinateInferencer:
                 response = self.llm_client.generate(prompt)
                 logger.debug(f"位置分析响应: {response.content[:500]}...")
             
-            # 解析响应
+            # 解析响应（允许模型输出推理过程/混合内容）
             content = response.content.strip()
             if content.startswith('```json'):
                 content = content[7:]
+            if content.startswith('```'):
+                content = content[3:]
             if content.endswith('```'):
                 content = content[:-3]
-            
-            location_info = json.loads(content)
+            content = content.strip()
+
+            try:
+                location_info = json.loads(content)
+            except json.JSONDecodeError:
+                extracted = self._extract_json_from_mixed_content(content)
+                location_info = json.loads(extracted)
+
+            # 兼容：若输出为单元素数组，取第一个对象
+            if isinstance(location_info, list) and len(location_info) == 1 and isinstance(location_info[0], dict):
+                location_info = location_info[0]
+
+            if not isinstance(location_info, dict):
+                logger.warning(f"位置分析结果不是JSON对象: type={type(location_info)}")
+                return None, 'location_json_not_object'
             
             # 验证必需字段
             if not location_info.get('参考点号'):
                 logger.warning(f"位置分析结果缺少参考点号: {location_desc}")
-                return None
+                return None, 'missing_reference_point'
             
-            return location_info
-            
+            return location_info, None
+             
+        except json.JSONDecodeError as e:
+            logger.error(f"位置描述分析JSON解析失败: {str(e)}")
+            return None, 'location_json_decode_error'
         except Exception as e:
             logger.error(f"位置描述分析失败: {str(e)}")
-            return None
+            return None, 'llm_call_failed'
     
     def _process_location_group(
         self, 
         location_info: Dict[str, Any],
-        holes: List[DrillHoleEntity]
+        holes: List[DrillHoleEntity],
+        start_coordinate_failure_counts: Optional[Counter] = None,
     ) -> Dict[str, Dict[str, Coordinate]]:
         """
         处理位置组的坐标计算
@@ -330,6 +361,20 @@ class CoordinateInferencer:
         
         if not start_coords:
             logger.warning(f"无法计算起点坐标: {location_info}")
+            if start_coordinate_failure_counts is not None:
+                ref_id = str(location_info.get('参考点号', '')).strip()
+                direction_type = str(location_info.get('方向类型', '')).strip()
+                direction_ref_id = location_info.get('方向参考点号')
+
+                if not ref_id or ref_id not in self.point_dict:
+                    start_coordinate_failure_counts['survey_ref_point_not_found'] += 1
+                elif direction_type in {'forward', 'backward', 'between'}:
+                    if not direction_ref_id or str(direction_ref_id) not in self.point_dict:
+                        start_coordinate_failure_counts['survey_direction_point_not_found'] += 1
+                    else:
+                        start_coordinate_failure_counts['start_coordinate_failed'] += 1
+                else:
+                    start_coordinate_failure_counts['start_coordinate_failed'] += 1
             return group_coordinates
         
         # 获取置信度和方法
@@ -376,6 +421,49 @@ class CoordinateInferencer:
             group_coordinates[hole.hole_id] = hole_coords
         
         return group_coordinates
+
+    def _extract_json_from_mixed_content(self, content: str) -> str:
+        """
+        从包含推理过程的混合内容中提取JSON（对象或数组）
+
+        Args:
+            content: 可能包含推理过程与JSON的混合文本
+
+        Returns:
+            提取出的JSON字符串
+
+        Raises:
+            json.JSONDecodeError: 未找到可解析的JSON片段
+        """
+        # 优先从后往前查找完整JSON数组
+        json_start_positions = [i for i, ch in enumerate(content) if ch == '[']
+        for start_pos in reversed(json_start_positions):
+            bracket_count = 0
+            for end_pos in range(start_pos, len(content)):
+                if content[end_pos] == '[':
+                    bracket_count += 1
+                elif content[end_pos] == ']':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        candidate = content[start_pos:end_pos + 1].strip()
+                        json.loads(candidate)
+                        return candidate
+
+        # 再尝试查找完整JSON对象
+        json_start_positions = [i for i, ch in enumerate(content) if ch == '{']
+        for start_pos in reversed(json_start_positions):
+            bracket_count = 0
+            for end_pos in range(start_pos, len(content)):
+                if content[end_pos] == '{':
+                    bracket_count += 1
+                elif content[end_pos] == '}':
+                    bracket_count -= 1
+                    if bracket_count == 0:
+                        candidate = content[start_pos:end_pos + 1].strip()
+                        json.loads(candidate)
+                        return candidate
+
+        raise json.JSONDecodeError("No valid JSON found in mixed content", content, 0)
     
     def _calculate_start_coordinate(self, location_info: Dict[str, Any]) -> Optional[Tuple[float, float, float]]:
         """

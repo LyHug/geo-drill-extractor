@@ -11,7 +11,7 @@ from datetime import datetime
 import logging
 from threading import Lock
 
-from ..core import (
+from core import (
     ProcessResult,
     DrillHoleEntity, 
     Coordinate,

@@ -82,7 +82,8 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
             if config_file.exists():
                 # 验证这是正确的项目目录（包含其他项目标志）
                 project_indicators = [
-                    current_dir / "src" / "kg_drill_extraction",
+                    current_dir / "src" / "core",
+                    current_dir / "src" / "extraction",
                     current_dir / "data",
                     current_dir / "documents", 
                     current_dir / "run_full_test.py"
@@ -103,8 +104,8 @@ class ConfigLoader(metaclass=ConfigLoaderMeta):
             # 获取当前模块文件路径
             import inspect
             current_file = Path(inspect.getfile(self.__class__))
-            # 假设结构: src/kg_drill_extraction/core/config.py
-            project_root = current_file.parent.parent.parent.parent
+            # 假设结构: src/core/config.py
+            project_root = current_file.parent.parent.parent
             config_file = project_root / "configs" / "config.yaml"
             if config_file.exists():
                 return str(config_file)

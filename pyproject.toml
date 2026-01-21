@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "kg-drill-extraction"
+name = "geo-drill-extractor"
 version = "0.1.0"
 description = "地质钻孔实体提取与坐标推理系统"
 readme = "README.md"
@@ -67,32 +67,21 @@ docs = [
     "sphinx-autodoc-typehints>=1.23.0",
 ]
 all = [
-    "kg-drill-extraction[dev,docs]",
+    "geo-drill-extractor[dev,docs]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/kg-team/kg-drill-extraction"
-Documentation = "https://kg-drill-extraction.readthedocs.io"
-Repository = "https://github.com/kg-team/kg-drill-extraction.git"
-"Bug Tracker" = "https://github.com/kg-team/kg-drill-extraction/issues"
-
-[project.scripts]
-kg-extract = "kg_drill_extraction.cli:main"
-kg-experiment = "kg_drill_extraction.experiment.runner:main"
+Homepage = "https://github.com/LyHug/geo-drill-extractor"
+Documentation = "https://github.com/LyHug/geo-drill-extractor"
+Repository = "https://github.com/LyHug/geo-drill-extractor.git"
+"Bug Tracker" = "https://github.com/LyHug/geo-drill-extractor/issues"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
 
 [tool.setuptools.packages.find]
 where = ["src"]
-include = ["kg_drill_extraction*"]
 exclude = ["tests*"]
-
-[tool.setuptools.package-data]
-kg_drill_extraction = [
-    "configs/*.yaml",
-    "data/*.csv",
-]
 
 [tool.black]
 line-length = 100
@@ -151,7 +140,12 @@ python_functions = ["test_*"]
 addopts = [
     "-ra",
     "--strict-markers",
-    "--cov=kg_drill_extraction",
+    "--cov=core",
+    "--cov=extraction",
+    "--cov=evaluation",
+    "--cov=experiment",
+    "--cov=llm",
+    "--cov=utils",
     "--cov-report=term-missing",
     "--cov-report=html",
     "--cov-report=xml",
@@ -163,10 +157,9 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/kg_drill_extraction"]
+source = ["src"]
 omit = [
     "*/tests/*",
-    "*/__init__.py",
     "*/setup.py",
 ]
 

@@ -4,23 +4,26 @@
 
 import os
 import json
+import csv
 import logging
 import traceback
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from threading import Lock
+from typing import Dict, List, Optional, Any, Tuple
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
 
-from ..core import (
+from core import (
     LLMModel,
     ProcessResult,
     ConfigLoader,
     get_config_loader,
     ExperimentException
 )
-from ..extraction import ExtractionPipeline
-from ..evaluation import (
+from extraction import ExtractionPipeline
+from evaluation import (
     SixMetricsProcessor,
     GroundTruthLoader,
     get_tokenizer_manager
@@ -70,7 +73,17 @@ class ExperimentRunner:
         
         # 加载配置
         self.documents_dir = Path(data_paths['documents_dir'])
-        self.output_dir = Path(self.config_loader.get('experiment.output_dir', './experiment_results'))
+        output_dir_value = self.config_loader.get('experiment.output_dir', './experiment_results')
+        output_dir_path = Path(str(output_dir_value))
+        if not output_dir_path.is_absolute():
+            try:
+                config_path = Path(self.config_loader.config_path)
+                if config_path.exists():
+                    project_root = config_path.resolve().parent.parent  # configs/config.yaml -> 项目根目录
+                    output_dir_path = project_root / output_dir_path
+            except Exception:
+                pass
+        self.output_dir = output_dir_path
         self.max_workers = self.config_loader.get('processing.parallel.max_workers', 3)
         
         # 初始化组件 - 使用配置的路径
@@ -79,6 +92,7 @@ class ExperimentRunner:
         )
         self.metrics_processor = SixMetricsProcessor(self.ground_truth_loader)
         self.tokenizer_manager = get_tokenizer_manager()
+        self._stats_lock = Lock()
         
         # 实验状态
         self.current_experiment_dir = None
@@ -92,6 +106,18 @@ class ExperimentRunner:
             'failed_runs': 0,
             'errors': []
         }
+
+    @staticmethod
+    def _json_default(obj: Any):
+        """JSON序列化兜底（处理numpy标量等非原生类型）。"""
+        if hasattr(obj, 'item') and callable(getattr(obj, 'item', None)):
+            try:
+                return obj.item()
+            except Exception:
+                pass
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return str(obj)
     
     def run_experiment(
         self,
@@ -133,28 +159,50 @@ class ExperimentRunner:
             # 批量处理文档
             all_results = {}
             documents_content = {}
+
+            # 预加载文档内容（用于token计算；避免并发读取同一文件）
+            for doc_path in documents:
+                documents_content[doc_path.name] = self._load_document_content(doc_path)
             
             for model in self.models:
                 logger.info(f"开始处理模型: {model.value}")
                 
                 model_results = []
-                for doc_path in documents:
-                    try:
-                        # 加载文档内容（用于token计算）
-                        if doc_path.name not in documents_content:
-                            documents_content[doc_path.name] = self._load_document_content(doc_path)
-                        
-                        # 运行多轮实验
-                        doc_results = self._run_document_experiments(
-                            model, doc_path, repetitions
-                        )
-                        model_results.extend(doc_results)
-                        
-                    except Exception as e:
-                        error_msg = f"处理文档 {doc_path.name} 失败: {str(e)}"
-                        logger.error(error_msg)
-                        self.experiment_stats['errors'].append(error_msg)
-                        self.experiment_stats['failed_runs'] += repetitions
+
+                if self.max_workers and self.max_workers > 1 and len(documents) > 1:
+                    # 文档级并行（同一模型下并行处理多个文档）。注意：并行会触发更多并发LLM请求，
+                    # 如出现限流/超时可在 configs/config.yaml 下调 processing.parallel.max_workers。
+                    with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+                        future_to_doc = {
+                            executor.submit(self._run_document_experiments, model, doc_path, repetitions): doc_path
+                            for doc_path in documents
+                        }
+
+                        for future in as_completed(future_to_doc):
+                            doc_path = future_to_doc[future]
+                            try:
+                                doc_results = future.result()
+                                model_results.extend(doc_results)
+                            except Exception as e:
+                                error_msg = f"处理文档 {doc_path.name} 失败: {str(e)}"
+                                logger.error(error_msg)
+                                with self._stats_lock:
+                                    self.experiment_stats['errors'].append(error_msg)
+                                    self.experiment_stats['failed_runs'] += repetitions
+                else:
+                    # 串行处理（更稳健，适合限流严格或超时较多的模型）
+                    for doc_path in documents:
+                        try:
+                            doc_results = self._run_document_experiments(
+                                model, doc_path, repetitions
+                            )
+                            model_results.extend(doc_results)
+                        except Exception as e:
+                            error_msg = f"处理文档 {doc_path.name} 失败: {str(e)}"
+                            logger.error(error_msg)
+                            with self._stats_lock:
+                                self.experiment_stats['errors'].append(error_msg)
+                                self.experiment_stats['failed_runs'] += repetitions
                 
                 all_results[model.value] = model_results
             
@@ -300,23 +348,29 @@ class ExperimentRunner:
                 result.processing_time = processing_time
                 results.append(result)
                 
-                self.experiment_stats['successful_runs'] += 1
+                with self._stats_lock:
+                    self.experiment_stats['successful_runs'] += 1
                 logger.info(f"成功完成 {doc_path.name} 第 {rep + 1} 轮，用时 {processing_time:.2f}s")
                 
             except Exception as e:
                 error_msg = f"处理失败 {doc_path.name} 第 {rep + 1} 轮: {str(e)}"
                 logger.error(error_msg)
                 
-                self.experiment_stats['failed_runs'] += 1
-                self.experiment_stats['errors'].append(error_msg)
+                with self._stats_lock:
+                    self.experiment_stats['failed_runs'] += 1
+                    self.experiment_stats['errors'].append(error_msg)
                 
                 # 创建错误结果
                 error_result = ProcessResult(
                     document_name=doc_path.name,
                     drill_holes=[],
-                    coordinates=[],
+                    coordinates={},
                     processing_time=0,
-                    errors=[str(e)],
+                    errors=[{
+                        'type': 'ProcessingError',
+                        'message': str(e),
+                        'traceback': traceback.format_exc()
+                    }],
                     metadata={
                         'repetition_round': rep + 1,
                         'model_name': model.value,
@@ -344,25 +398,210 @@ class ExperimentRunner:
     def _save_experiment_results(self, results: Dict[str, Any]):
         """保存实验结果到文件"""
         try:
-            # 保存完整结果为JSON
-            results_file = self.current_experiment_dir / "experiment_results.json"
-            with open(results_file, 'w', encoding='utf-8') as f:
-                json.dump(results, f, ensure_ascii=False, indent=2, default=str)
-            
-            # 保存处理结果摘要
+            from .exporter import JSONExporter, FieldMapper
+
+            export_time = datetime.now().isoformat()
+            raw_results_by_model: Dict[str, List[ProcessResult]] = results.get('raw_results', {})
+            metrics_by_model = results.get('metrics', {})
+            metadata = results.get('metadata', {})
+            statistics = results.get('statistics', {})
+
+            # 1) 导出原始提取结果（包含metadata，便于后续失败模式统计）
+            json_exporter = JSONExporter(self.config_loader)
+            raw_results_export = {
+                'export_info': {
+                    'export_time': export_time,
+                    'total_models': len(raw_results_by_model),
+                    'total_runs': sum(len(v) for v in raw_results_by_model.values()),
+                },
+                'models': {}
+            }
+            for model_name, model_results in raw_results_by_model.items():
+                raw_results_export['models'][model_name] = json_exporter._prepare_results_json_data(model_results)
+
             raw_results_file = self.current_experiment_dir / "raw_results.json"
             with open(raw_results_file, 'w', encoding='utf-8') as f:
-                json.dump(results['raw_results'], f, ensure_ascii=False, indent=2, default=str)
-            
-            # 保存指标结果
+                json.dump(raw_results_export, f, ensure_ascii=False, indent=2, default=self._json_default)
+
+            # 2) 导出指标结果（用于统计分析/绘图）
+            field_mapper = FieldMapper(self.config_loader)
+            metrics_export = {
+                'export_info': {
+                    'export_time': export_time,
+                    'total_models': len(metrics_by_model),
+                    'total_documents': metadata.get('total_documents'),
+                    'repetitions': metadata.get('repetitions'),
+                },
+                'models': {}
+            }
+            metrics_rows: List[Dict[str, Any]] = []
+            for model_name, model_metrics in metrics_by_model.items():
+                mapped = [field_mapper.map_metrics_to_dict(m) for m in model_metrics]
+                metrics_export['models'][model_name] = mapped
+                metrics_rows.extend(mapped)
+
             metrics_file = self.current_experiment_dir / "metrics_results.json"
             with open(metrics_file, 'w', encoding='utf-8') as f:
-                json.dump(results['metrics'], f, ensure_ascii=False, indent=2, default=str)
-            
+                json.dump(metrics_export, f, ensure_ascii=False, indent=2, default=self._json_default)
+
+            metrics_csv_file = None
+            if metrics_rows:
+                metrics_csv_file = self.current_experiment_dir / "metrics_results.csv"
+                fieldnames = sorted({k for row in metrics_rows for k in row.keys()})
+                with open(metrics_csv_file, 'w', newline='', encoding='utf-8-sig') as csvfile:
+                    writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                    writer.writeheader()
+                    writer.writerows(metrics_rows)
+
+            # 3) 失败模式汇总（区分协议/解析失败 vs 语义/几何失败）
+            failure_summary, failure_rows = self._summarize_failure_modes(raw_results_by_model)
+            failure_summary_file = self.current_experiment_dir / "failure_modes_summary.json"
+            with open(failure_summary_file, 'w', encoding='utf-8') as f:
+                json.dump(failure_summary, f, ensure_ascii=False, indent=2, default=self._json_default)
+
+            failure_csv_file = None
+            if failure_rows:
+                failure_csv_file = self.current_experiment_dir / "failure_modes_breakdown.csv"
+                with open(failure_csv_file, 'w', newline='', encoding='utf-8-sig') as csvfile:
+                    writer = csv.DictWriter(
+                        csvfile,
+                        fieldnames=['model_name', 'stage', 'reason', 'count', 'denominator', 'proportion'],
+                    )
+                    writer.writeheader()
+                    writer.writerows(failure_rows)
+
+            # 4) 保存实验总览（包含指向导出文件的引用）
+            results_file = self.current_experiment_dir / "experiment_results.json"
+            export_payload = {
+                'metadata': metadata,
+                'statistics': statistics,
+                'raw_results': raw_results_export,
+                'metrics': metrics_export,
+                'failure_modes': failure_summary,
+                'exported_files': {
+                    'raw_results_json': str(raw_results_file.name),
+                    'metrics_results_json': str(metrics_file.name),
+                    'metrics_results_csv': str(metrics_csv_file.name) if metrics_csv_file else None,
+                    'failure_modes_summary_json': str(failure_summary_file.name),
+                    'failure_modes_breakdown_csv': str(failure_csv_file.name) if failure_csv_file else None,
+                }
+            }
+            with open(results_file, 'w', encoding='utf-8') as f:
+                json.dump(export_payload, f, ensure_ascii=False, indent=2, default=self._json_default)
+
+            # 5) 生成便于查看的摘要文本
+            summary_file = self.current_experiment_dir / "processing_summary.txt"
+            successful_runs = int(statistics.get('successful_runs') or 0)
+            failed_runs = int(statistics.get('failed_runs') or 0)
+            total_runs = successful_runs + failed_runs
+            success_rate = (successful_runs / total_runs * 100) if total_runs else 0.0
+
+            with open(summary_file, 'w', encoding='utf-8') as f:
+                f.write("Experiment Summary\n")
+                f.write("=" * 60 + "\n")
+                f.write(f"export_time: {export_time}\n")
+                f.write(f"models: {len(metadata.get('models', []))}\n")
+                f.write(f"documents: {metadata.get('total_documents')}\n")
+                f.write(f"repetitions: {metadata.get('repetitions')}\n")
+                f.write(f"successful_runs: {successful_runs}\n")
+                f.write(f"failed_runs: {failed_runs}\n")
+                f.write(f"success_rate_percent: {success_rate:.2f}\n")
+                f.write("\nFiles\n")
+                f.write("-" * 60 + "\n")
+                f.write(f"experiment_results.json: {results_file.name}\n")
+                f.write(f"raw_results.json: {raw_results_file.name}\n")
+                f.write(f"metrics_results.json: {metrics_file.name}\n")
+                if metrics_csv_file:
+                    f.write(f"metrics_results.csv: {metrics_csv_file.name}\n")
+                f.write(f"failure_modes_summary.json: {failure_summary_file.name}\n")
+                if failure_csv_file:
+                    f.write(f"failure_modes_breakdown.csv: {failure_csv_file.name}\n")
+
             logger.info(f"实验结果已保存到: {self.current_experiment_dir}")
             
         except Exception as e:
             logger.error(f"保存实验结果失败: {str(e)}")
+            logger.error(traceback.format_exc())
+
+    def _summarize_failure_modes(
+        self,
+        results_by_model: Dict[str, List[ProcessResult]],
+    ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+        """
+        汇总失败模式（基于每次运行metadata中的失败计数）。
+
+        Returns:
+            (summary_json, breakdown_rows_for_csv)
+        """
+        export_time = datetime.now().isoformat()
+        summary: Dict[str, Any] = {
+            'export_time': export_time,
+            'models': {}
+        }
+        breakdown_rows: List[Dict[str, Any]] = []
+
+        for model_name, results in results_by_model.items():
+            total_runs = len(results)
+
+            unique_location_total = 0
+            location_success_total = 0
+            location_failure_counts: Counter = Counter()
+            start_coordinate_failure_counts: Counter = Counter()
+
+            for result in results:
+                meta = result.metadata or {}
+
+                unique_location_total += int(meta.get('unique_location_descriptions_count') or 0)
+                location_success_total += int(meta.get('location_analysis_success_count') or 0)
+
+                location_failures = meta.get('location_analysis_failure_counts') or {}
+                if isinstance(location_failures, dict):
+                    location_failure_counts.update({
+                        str(k): int(v) for k, v in location_failures.items()
+                    })
+
+                start_failures = meta.get('start_coordinate_failure_counts') or {}
+                if isinstance(start_failures, dict):
+                    start_coordinate_failure_counts.update({
+                        str(k): int(v) for k, v in start_failures.items()
+                    })
+
+            location_failure_total = int(sum(location_failure_counts.values()))
+            location_attempt_total = int(location_success_total + location_failure_total)
+
+            summary['models'][model_name] = {
+                'total_runs': total_runs,
+                'unique_location_descriptions_total': unique_location_total,
+                'location_analysis_success_total': location_success_total,
+                'location_analysis_failure_total': location_failure_total,
+                'location_analysis_attempt_total': location_attempt_total,
+                'location_analysis_failure_counts': dict(location_failure_counts),
+                'start_coordinate_failure_counts': dict(start_coordinate_failure_counts),
+            }
+
+            for reason, count in location_failure_counts.items():
+                denom = location_attempt_total or 0
+                breakdown_rows.append({
+                    'model_name': model_name,
+                    'stage': 'location_analysis',
+                    'reason': reason,
+                    'count': int(count),
+                    'denominator': int(denom),
+                    'proportion': (float(count) / denom) if denom else None,
+                })
+
+            for reason, count in start_coordinate_failure_counts.items():
+                denom = location_success_total or 0
+                breakdown_rows.append({
+                    'model_name': model_name,
+                    'stage': 'start_coordinate',
+                    'reason': reason,
+                    'count': int(count),
+                    'denominator': int(denom),
+                    'proportion': (float(count) / denom) if denom else None,
+                })
+
+        return summary, breakdown_rows
     
     def _log_experiment_summary(self):
         """记录实验摘要"""

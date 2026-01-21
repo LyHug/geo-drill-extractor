@@ -13,7 +13,7 @@ An AI-powered system that automatically extracts structured drill hole informati
    - Copy `.env.example` to `.env` and configure your API keys
 
 2. **Data Preparation**
-   - Place your geological exploration reports (.docx) in the `documents/` directory
+   - Place your geological exploration reports (.docx) in the directory configured by `data.documents_dir` in `configs/config.yaml` (default: `documents/实验用钻孔文档/`)
    - Add survey control points data to `data/导线点.csv`
    - Prepare ground truth annotations in `data/ground_truth_annotations.csv`
 
@@ -23,8 +23,8 @@ An AI-powered system that automatically extracts structured drill hole informati
 
 4. **Run Extraction**
    - For full evaluation (paper reproduction): `python run_full_test.py`
-   - For quick testing: `python new_experiment.py --type quick --documents 3`
-   - For custom experiments: `python new_experiment.py --type custom --models deepseek-r1-distill-qwen-32b-aliyun --documents 10`
+   - For quick testing (synthetic dataset, low cost): `python scripts/run_incremental_experiment.py --dataset synthetic --documents 3 --repetitions 1`
+   - For custom experiments: `python scripts/run_incremental_experiment.py --dataset real --models deepseek-r1-distill-qwen-32b-aliyun --documents 10 --repetitions 2`
 
 5. **Results Analysis**
    - Check results in `experiment_results/` directory

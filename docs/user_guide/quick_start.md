@@ -45,7 +45,7 @@ llm:
 ### 4. 准备数据文件
 
 确保以下数据文件存在：
-- `documents/` - 待处理的Word文档（.docx格式）
+- `documents/`（或 `configs/config.yaml` 的 `data.documents_dir` 指向的目录；论文实验默认：`documents/实验用钻孔文档/`）- 待处理的Word文档（.docx格式）
 - `data/导线点.csv` - 测量控制点坐标
 - `data/ground_truth_annotations.csv` - 标注数据（可选）
 
@@ -63,14 +63,14 @@ python run_full_test.py
 
 #### 方式2：快速功能验证
 ```bash
-python new_experiment.py --type quick --documents 3
+python scripts/run_incremental_experiment.py --dataset synthetic --documents 3 --repetitions 1
 ```
 - ⚡ 3个文档，1轮测试
 - ⚡ 用时约2-5分钟
 
 #### 方式3：自定义实验
 ```bash
-python new_experiment.py --type custom --models deepseek-r1-distill-qwen-32b-aliyun --documents 10 --repetitions 2
+python scripts/run_incremental_experiment.py --dataset real --models deepseek-r1-distill-qwen-32b-aliyun --documents 10 --repetitions 2
 ```
 
 ## 📊 查看结果
@@ -79,7 +79,10 @@ python new_experiment.py --type custom --models deepseek-r1-distill-qwen-32b-ali
 - `experiment_results/YYYY-MM-DD_HH-MM-SS/` - 实验结果目录
   - `experiment_results.json` - 完整实验数据
   - `metrics_results.json` - 6指标评估结果
+  - `metrics_results.csv` - 6指标评估结果（CSV，便于统计分析/绘图）
   - `raw_results.json` - 原始提取结果
+  - `failure_modes_summary.json` - 失败模式汇总（区分协议/解析失败 vs 坐标推断失败）
+  - `failure_modes_breakdown.csv` - 失败模式明细表（按原因统计）
 
 ### 结果解读
 
@@ -121,20 +124,27 @@ python new_experiment.py --type custom --models deepseek-r1-distill-qwen-32b-ali
 📊 成功率: 98.9% (89/90)
 📄 文档数: 30
 🤖 模型数: 1
-📁 结果: simplified_system\experiment_results\2025-09-04_14-30-00
+📁 结果: experiment_results\2025-09-04_14-30-00
 ✅ 测试成功！
 ```
 
 ### 输出文件结构
 ```
 experiment_results/2025-09-04_14-30-00/
-├── experiment_results.json      # 完整实验数据
-├── metrics_results.json         # 6指标评估结果  
-├── raw_results.json            # 原始提取结果
-└── processing_summary.txt      # 处理摘要
+ ├── experiment_results.json      # 完整实验数据
+ ├── metrics_results.json         # 6指标评估结果  
+ ├── metrics_results.csv          # 6指标评估结果（CSV）
+ ├── raw_results.json            # 原始提取结果
+ ├── failure_modes_summary.json   # 失败模式汇总
+ ├── failure_modes_breakdown.csv  # 失败模式明细
+ └── processing_summary.txt      # 处理摘要
 ```
 
 ## 🔧 基础配置
+
+## 🧪 Synthetic dataset（可复现用假数据）
+
+真实工程文档可能受保密限制无法公开。仓库提供了可复现管线逻辑的合成数据（dummy data），详见：`docs/user_guide/synthetic_dataset.md`。
 
 ### 常用配置项
 
@@ -169,9 +179,10 @@ experiment:
 
 ### 2. 找不到文档文件
 ```bash
-❌ 找不到文档目录: simplified_system/documents
+❌ 找不到文档目录: documents
 ```
 **解决方案**: 确保 `documents/` 目录存在且包含 `.docx` 文件
+（或检查 `configs/config.yaml` 中 `data.documents_dir` 是否指向实际存放文档的目录）。
 
 ### 3. 内存不足
 ```bash

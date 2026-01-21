@@ -9,7 +9,7 @@ from collections import defaultdict
 
 from .ground_truth import GroundTruthLoader
 from .tokenizer import get_tokenizer_manager
-from ..core import (
+from core import (
     ProcessResult,
     SingleRunMetrics,
     SingleRunMetricsData,
@@ -19,7 +19,7 @@ from ..core import (
     LLMModel,
     calculate_six_metrics_from_raw_data
 )
-from ..core.exceptions import (
+from core.exceptions import (
     EvaluationException,
     DataException
 )

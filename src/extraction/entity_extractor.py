@@ -9,18 +9,18 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 
 from .prompts import EXTRACTION_PROMPT_TEMPLATE
-from ..core import (
+from core import (
     DrillHoleEntity,
     DrillHoleDesignParams,
     DrillHoleActualParams
 )
-from ..core.exceptions import (
+from core.exceptions import (
     ExtractionException,
     EntityExtractionException,
     InvalidEntityFormatException,
     NoEntitiesFoundException
 )
-from ..llm import BaseLLMClient
+from llm import BaseLLMClient
 
 logger = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ class EntityExtractor:
                     print(f"\n✅ 实体提取完成，响应长度: {len(full_response)}")
                     
                     # 构建响应对象（模拟LLMResponse）
-                    from ..llm.base import LLMResponse
+                    from llm.base import LLMResponse
                     response = LLMResponse(
                         content=full_response,
                         model=self.llm_client._get_model_name() if hasattr(self.llm_client, '_get_model_name') else 'unknown',

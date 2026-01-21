@@ -175,7 +175,7 @@ memory_management:
 
 # 临时文件管理
 temp_file_management:
-  temp_dir: './simplified_system/temp'
+  temp_dir: './temp'
   max_temp_size_gb: 5.0
   cleanup_interval: 3600  # 秒
   auto_cleanup_on_exit: true

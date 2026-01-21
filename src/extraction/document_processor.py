@@ -12,7 +12,7 @@ from docx.oxml.text.paragraph import CT_P
 from docx.table import Table
 from docx.text.paragraph import Paragraph
 
-from ..core.exceptions import (
+from core.exceptions import (
     DocumentException,
     DocumentNotFoundException,
     DocumentReadException,

@@ -3,7 +3,7 @@
 
 # 系统信息
 system:
-  name: "Geo Drill Extractor"
+  name: "geo-drill-extractor"
   version: "2.0.0"
   stage: "生产版本"
   refactor_date: "2025-09-04"
@@ -24,7 +24,8 @@ config_imports:
 
 # 数据路径配置
 data:
-  documents_dir: "./documents"
+  # 默认指向论文实验用的 30 个文档（与 ground_truth_annotations.csv 一致）
+  documents_dir: "./documents/实验用钻孔文档"
   survey_points_file: "./data/导线点.csv"
   ground_truth_file: "./data/ground_truth_annotations.csv"
   output_dir: "./output"
@@ -34,7 +35,7 @@ llm:
   default_model: "deepseek-r1-distill-qwen-32b-aliyun"
   temperature: 0.1
   max_tokens: 8192
-  timeout: 60
+  timeout: 180
   retry_times: 3
   
   # API密钥配置 - 使用环境变量
@@ -47,7 +48,7 @@ llm:
 processing:
   parallel:
     enabled: true
-    max_workers: 5
+    max_workers: 3
     max_concurrent_llm_calls: 10
   text_chunking:
     max_chunk_size: 2000
