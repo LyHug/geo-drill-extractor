@@ -138,3 +138,7 @@ data/*
 # Environment variables and secrets (do not commit)
 *.env
 !.env.example
+
+# Literature folders (excluded from version control)
+/paper/
+/patent/
