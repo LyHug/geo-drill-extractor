@@ -142,3 +142,6 @@ data/*
 # Literature folders (excluded from version control)
 /paper/
 /patent/
+
+# Codex CLI workspace cache/config (excluded from version control)
+/.codex/
