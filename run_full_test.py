@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding:utf-8 -*-
 """
-直接运行7个核心模型完整测试的简单脚本
-配置：7个模型 + 30个文档 + 3轮重复 + 流式输出
+直接运行8个核心模型完整测试的简单脚本
+配置：8个模型 + 30个文档 + 3轮重复 + 流式输出
 支持的模型：DeepSeek R1系列、GPT系列、Qwen系列
 """
 
@@ -24,9 +24,9 @@ from core import LLMModel
 
 def main():
     """主函数 - 直接运行完整测试"""
-    print("🚀 KG钻孔提取系统 - 7个核心模型完整测试")
+    print("🚀 KG钻孔提取系统 - 8个核心模型完整测试")
     print("="*50)
-    print("⚙️  测试配置: 7个模型 × 30个文档 × 3轮重复")
+    print("⚙️  测试配置: 8个模型 × 30个文档 × 3轮重复")
     print(f"🕐 开始时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print()
 
@@ -41,6 +41,7 @@ def main():
                         'deepseek-r1-distill-qwen-32b-aliyun',
                         'gpt-3.5-turbo-openrouter',
                         'gpt-4o-mini-openrouter',
+                        'gpt-4.1-openrouter',
                         'qwen-max',
                         'qwq-32b'
                          ]

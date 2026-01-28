@@ -24,6 +24,7 @@ class OpenRouterClient(BaseLLMClient):
     MODEL_NAME_MAP = {
         LLMModel.GPT_35_TURBO_OPENROUTER: "openai/gpt-3.5-turbo",
         LLMModel.GPT_4O_MINI_OPENROUTER: "openai/gpt-4o-mini",
+        LLMModel.GPT_41_OPENROUTER: "openai/gpt-4.1",
     }
     
     def _initialize(self):

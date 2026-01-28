@@ -46,6 +46,7 @@ class TokenizerManager:
         # GPT系列 (使用GPT-2分词器作为近似)
         LLMModel.GPT_35_TURBO_OPENROUTER: TokenizerInfo("gpt2", trust_remote_code=False),
         LLMModel.GPT_4O_MINI_OPENROUTER: TokenizerInfo("gpt2", trust_remote_code=False),
+        LLMModel.GPT_41_OPENROUTER: TokenizerInfo("gpt2", trust_remote_code=False),
     }
     
     def __init__(self, fallback_to_char_count: bool = True):

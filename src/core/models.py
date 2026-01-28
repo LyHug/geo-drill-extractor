@@ -28,6 +28,7 @@ class LLMModel(Enum):
     # GPT系列
     GPT_35_TURBO_OPENROUTER = "gpt-3.5-turbo-openrouter"
     GPT_4O_MINI_OPENROUTER = "gpt-4o-mini-openrouter"
+    GPT_41_OPENROUTER = "gpt-4.1-openrouter"
 
 
 @dataclass

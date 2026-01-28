@@ -27,6 +27,7 @@ class LLMClientFactory:
         # OpenRouter模型
         LLMModel.GPT_35_TURBO_OPENROUTER: OpenRouterClient,
         LLMModel.GPT_4O_MINI_OPENROUTER: OpenRouterClient,
+        LLMModel.GPT_41_OPENROUTER: OpenRouterClient,
         
         # DeepSeek官方模型
         LLMModel.DEEPSEEK_V3_OFFICIAL: DeepSeekClient,
@@ -50,6 +51,10 @@ class LLMClientFactory:
             'base_url': 'https://openrouter.ai/api/v1'
         },
         LLMModel.GPT_4O_MINI_OPENROUTER: {
+            'api_key_name': 'openrouter',
+            'base_url': 'https://openrouter.ai/api/v1'
+        },
+        LLMModel.GPT_41_OPENROUTER: {
             'api_key_name': 'openrouter',
             'base_url': 'https://openrouter.ai/api/v1'
         },
