@@ -143,5 +143,14 @@ data/*
 /paper/
 /patent/
 
+# Allow specific revision artifacts under /paper/ to be tracked
+!/paper/
+/paper/*
+!/paper/peer_review/
+/paper/peer_review/*
+!/paper/peer_review/round_1/
+/paper/peer_review/round_1/*
+!/paper/peer_review/round_1/response_letter_final.md
+
 # Codex CLI workspace cache/config (excluded from version control)
 /.codex/
