@@ -4,9 +4,10 @@
 Generate a small synthetic dataset for reproducibility (no confidential data).
 
 Outputs (project-relative):
-- downloads/peer_review_round1/synthetic_dataset/documents/*.docx
-- downloads/peer_review_round1/synthetic_dataset/data/survey_points_synthetic.csv
-- downloads/peer_review_round1/synthetic_dataset/data/ground_truth_annotations_synthetic.csv
+- Supplementary/synthetic_dataset/documents_zh/*.docx (Chinese; actual inputs used by the pipeline)
+- Supplementary/synthetic_dataset/documents_en/*.docx (English translations for reviewer readability)
+- Supplementary/synthetic_dataset/data/survey_points_synthetic.csv
+- Supplementary/synthetic_dataset/data/ground_truth_annotations_synthetic.csv
 """
 
 from __future__ import annotations
@@ -34,8 +35,10 @@ class SyntheticHole:
 @dataclass(frozen=True)
 class SyntheticDoc:
     filename: str
-    title: str
-    project_line: str
+    title_zh: str
+    project_line_zh: str
+    title_en: str
+    project_line_en: str
     report_date: str
     holes: list[SyntheticHole]
 
@@ -48,7 +51,7 @@ def _write_csv(path: Path, rows: list[dict[str, object]], fieldnames: list[str])
         writer.writerows(rows)
 
 
-def _write_docx(path: Path, doc: SyntheticDoc) -> None:
+def _write_docx_zh(path: Path, doc: SyntheticDoc) -> None:
     try:
         from docx import Document
     except Exception as e:
@@ -60,59 +63,108 @@ def _write_docx(path: Path, doc: SyntheticDoc) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
     d = Document()
-    d.add_heading(doc.title, level=1)
-    d.add_paragraph(doc.project_line)
+    d.add_heading(doc.title_zh, level=1)
+    d.add_paragraph(doc.project_line_zh)
+    d.add_paragraph(f"报告日期：{doc.report_date}")
+    d.add_paragraph("说明：本文件为合成（虚拟）数据，用于复现流程逻辑，不包含任何真实工程项目的保密信息。")
+    d.add_paragraph("")
+
+    d.add_paragraph(
+        f"本工程于{doc.report_date}完成验收，共施工{len(doc.holes)}个钻孔。现将钻孔验收与施工记录汇总如下："
+    )
+    d.add_paragraph("")
+
+    d.add_heading("一、任务来源", level=2)
+    d.add_paragraph("本次钻探用于示例说明钻孔竣工报告的记录方式，并提供结构化信息抽取与坐标推断所需字段。")
+    d.add_paragraph("")
+
+    d.add_heading("二、钻孔施工情况", level=2)
+
+    for idx, hole in enumerate(doc.holes, start=1):
+        d.add_paragraph(
+            f"{idx}．{hole.hole_id}钻孔，设计位置：{hole.location_desc}；"
+            f"设计方位：{hole.design_azimuth_deg}°；设计倾角：{hole.design_inclination_deg}°；"
+            f"设计孔深：{hole.design_depth_m} m。"
+        )
+        d.add_paragraph(
+            f"该孔实际施工参数：实际方位{hole.actual_azimuth_deg}°，实际倾角{hole.actual_inclination_deg}°，"
+            f"终孔深度{hole.actual_depth_m} m。"
+        )
+
+        d.add_paragraph("参数汇总表：")
+        t = d.add_table(rows=1, cols=4)
+        hdr = t.rows[0].cells
+        hdr[0].text = "字段"
+        hdr[1].text = "设计"
+        hdr[2].text = "实际"
+        hdr[3].text = "单位"
+
+        def add_row(field: str, design: str, actual: str, unit: str) -> None:
+            r = t.add_row().cells
+            r[0].text = field
+            r[1].text = design
+            r[2].text = actual
+            r[3].text = unit
+
+        add_row("孔深", str(hole.design_depth_m), str(hole.actual_depth_m), "m")
+        add_row("方位角", str(hole.design_azimuth_deg), str(hole.actual_azimuth_deg), "°")
+        add_row("倾角", str(hole.design_inclination_deg), str(hole.actual_inclination_deg), "°")
+        d.add_paragraph("")
+
+    d.add_heading("三、结论", level=2)
+    d.add_paragraph("以上钻孔记录为合成数据，仅用于复现信息抽取与坐标推断流程，不代表任何真实工程项目。")
+
+    d.save(path)
+
+def _write_docx_en(path: Path, doc: SyntheticDoc) -> None:
+    try:
+        from docx import Document
+    except Exception as e:
+        raise RuntimeError(
+            "python-docx is required to generate .docx files. "
+            "Install with: pip install python-docx"
+        ) from e
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    d = Document()
+    d.add_heading(doc.title_en, level=1)
+    d.add_paragraph(doc.project_line_en)
     d.add_paragraph(f"Report date: {doc.report_date}")
     d.add_paragraph(
         "NOTE: This document is synthetic (dummy) data for reproducibility and contains no confidential content."
     )
+    d.add_paragraph("")
+
     d.add_paragraph(
-        "说明：本文件为合成（虚拟）数据，用于复现流程逻辑，不包含任何真实工程项目的保密信息。"
+        f"This completion report summarizes {len(doc.holes)} synthetic boreholes and demonstrates a realistic writing style used in borehole records."
     )
     d.add_paragraph("")
 
-    d.add_heading("1. Overview / 概述", level=2)
+    d.add_heading("1. Task background", level=2)
     d.add_paragraph(
-        "本报告用于说明钻孔施工与验收的记录方式，并提供若干钻孔的设计参数与实际施工参数。"
-    )
-    d.add_paragraph(
-        "This report demonstrates a realistic writing style of borehole completion records and provides both design and actual parameters."
+        "This synthetic report is provided to support reproducibility of the information-extraction and coordinate-inference pipeline, without redistributing confidential project documents."
     )
     d.add_paragraph("")
 
+    d.add_heading("2. Borehole records", level=2)
     for idx, hole in enumerate(doc.holes, start=1):
-        d.add_heading(f"2.{idx} Borehole record / 钻孔记录", level=2)
-
-        zh_design = (
-            f"{hole.hole_id}钻孔，设计位置：{hole.location_desc}；"
-            f"设计方位：{hole.design_azimuth_deg}°；设计倾角：{hole.design_inclination_deg}°；"
-            f"设计孔深：{hole.design_depth_m} m。"
-        )
-        zh_actual = (
-            f"该孔实际施工参数：实际方位{hole.actual_azimuth_deg}°，实际倾角{hole.actual_inclination_deg}°，"
-            f"终孔深度{hole.actual_depth_m} m（以实际测量为准）。"
-        )
-        en_design = (
-            f"Borehole {hole.hole_id}. Design location: {hole.location_desc_en}; "
+        d.add_paragraph(
+            f"{idx}. Borehole {hole.hole_id}. Design location: {hole.location_desc_en}; "
             f"design azimuth: {hole.design_azimuth_deg}°; design inclination: {hole.design_inclination_deg}°; "
             f"design depth: {hole.design_depth_m} m."
         )
-        en_actual = (
+        d.add_paragraph(
             f"Actual drilling parameters: azimuth {hole.actual_azimuth_deg}°, inclination {hole.actual_inclination_deg}°, "
-            f"final depth {hole.actual_depth_m} m (as measured)."
+            f"final depth {hole.actual_depth_m} m."
         )
 
-        d.add_paragraph(zh_design)
-        d.add_paragraph(en_design)
-        d.add_paragraph(zh_actual)
-        d.add_paragraph(en_actual)
-
-        d.add_paragraph("Key parameters table / 参数汇总表：")
+        d.add_paragraph("Key parameters table:")
         t = d.add_table(rows=1, cols=4)
         hdr = t.rows[0].cells
-        hdr[0].text = "Field / 字段"
-        hdr[1].text = "Design / 设计"
-        hdr[2].text = "Actual / 实际"
+        hdr[0].text = "Field"
+        hdr[1].text = "Design"
+        hdr[2].text = "Actual"
         hdr[3].text = "Unit"
 
         def add_row(field: str, design: str, actual: str, unit: str) -> None:
@@ -127,18 +179,24 @@ def _write_docx(path: Path, doc: SyntheticDoc) -> None:
         add_row("Inclination", str(hole.design_inclination_deg), str(hole.actual_inclination_deg), "deg")
         d.add_paragraph("")
 
+    d.add_heading("3. Notes", level=2)
+    d.add_paragraph(
+        "All contents are synthetic and for demonstration only; they do not correspond to any real engineering project."
+    )
     d.save(path)
 
-
 def generate(project_root: Path, output_root: Path) -> dict[str, Path]:
-    docs_dir = output_root / "documents"
+    docs_zh_dir = output_root / "documents_zh"
+    docs_en_dir = output_root / "documents_en"
     data_dir = output_root / "data"
 
     docs: list[SyntheticDoc] = [
         SyntheticDoc(
             filename="synthetic_borehole_report_001.docx",
-            title="Synthetic Borehole Completion Report 001",
-            project_line="Synthetic project line: roadway advance drilling (dummy data). / 合成项目：巷道超前钻探（虚拟数据）",
+            title_zh="合成钻孔竣工报告 001（虚拟数据）",
+            project_line_zh="合成项目：巷道超前钻探（虚拟数据）",
+            title_en="Synthetic Borehole Completion Report 001 (Dummy Data)",
+            project_line_en="Synthetic project line: roadway advance drilling (dummy data)",
             report_date=str(date(2026, 1, 20)),
             holes=[
                 SyntheticHole(
@@ -167,8 +225,10 @@ def generate(project_root: Path, output_root: Path) -> dict[str, Path]:
         ),
         SyntheticDoc(
             filename="synthetic_borehole_report_002.docx",
-            title="Synthetic Borehole Completion Report 002",
-            project_line="Synthetic project line: roadway hydrogeological probing (dummy data). / 合成项目：巷道水文探查（虚拟数据）",
+            title_zh="合成钻孔竣工报告 002（虚拟数据）",
+            project_line_zh="合成项目：巷道水文探查（虚拟数据）",
+            title_en="Synthetic Borehole Completion Report 002 (Dummy Data)",
+            project_line_en="Synthetic project line: roadway hydrogeological probing (dummy data)",
             report_date=str(date(2026, 1, 21)),
             holes=[
                 SyntheticHole(
@@ -231,10 +291,15 @@ def generate(project_root: Path, output_root: Path) -> dict[str, Path]:
 
     # Docs
     for d in docs:
-        _write_docx(docs_dir / d.filename, d)
+        # Chinese: actual inputs used by the pipeline
+        _write_docx_zh(docs_zh_dir / d.filename, d)
+
+        # English: translations for reviewer readability
+        _write_docx_en(docs_en_dir / d.filename, d)
 
     return {
-        "documents_dir": docs_dir,
+        "documents_zh_dir": docs_zh_dir,
+        "documents_en_dir": docs_en_dir,
         "survey_points_file": survey_points_file,
         "ground_truth_file": gt_file,
     }
@@ -245,7 +310,7 @@ def main() -> int:
     parser.add_argument(
         "--output-root",
         type=Path,
-        default=Path("downloads/peer_review_round1/synthetic_dataset"),
+        default=Path("Supplementary/synthetic_dataset"),
         help="Output folder (relative to project root by default).",
     )
     args = parser.parse_args()
