@@ -61,18 +61,26 @@ def main() -> int:
     config_loader = get_config_loader()
 
     if args.dataset == "synthetic":
-        docs_dir = project_root / "documents_synthetic"
-        survey_points_file = project_root / "data_synthetic" / "survey_points_synthetic.csv"
-        ground_truth_file = project_root / "data_synthetic" / "ground_truth_annotations_synthetic.csv"
+        dataset_root = project_root / "Supplementary" / "synthetic_dataset"
+        docs_dir = dataset_root / "documents_zh"
+        data_dir = dataset_root / "data"
+        survey_points_file = data_dir / "survey_points_synthetic.csv"
+        ground_truth_file = data_dir / "ground_truth_annotations_synthetic.csv"
 
         if not (docs_dir.exists() and survey_points_file.exists() and ground_truth_file.exists()):
             generator = project_root / "scripts" / "generate_synthetic_dataset.py"
             print("Synthetic dataset not found; generating...")
-            os.system(f"\"{sys.executable}\" \"{generator}\"")
+            os.system(
+                f"\"{sys.executable}\" \"{generator}\" --output-root \"Supplementary/synthetic_dataset\""
+            )
 
-        config_loader.set("data.documents_dir", "./documents_synthetic")
-        config_loader.set("data.survey_points_file", "./data_synthetic/survey_points_synthetic.csv")
-        config_loader.set("data.ground_truth_file", "./data_synthetic/ground_truth_annotations_synthetic.csv")
+        docs_dir_rel = docs_dir.relative_to(project_root).as_posix()
+        survey_points_rel = survey_points_file.relative_to(project_root).as_posix()
+        ground_truth_rel = ground_truth_file.relative_to(project_root).as_posix()
+
+        config_loader.set("data.documents_dir", f"./{docs_dir_rel}")
+        config_loader.set("data.survey_points_file", f"./{survey_points_rel}")
+        config_loader.set("data.ground_truth_file", f"./{ground_truth_rel}")
 
     model_values: List[str] = [m.strip() for m in args.models.split(",") if m.strip()]
     model_enums: List[LLMModel] = []
