@@ -8,7 +8,6 @@ build/
 develop-eggs/
 dist/
 downloads/
-Supplementary/
 eggs/
 .eggs/
 lib/
@@ -140,18 +139,10 @@ data/*
 *.env
 !.env.example
 
-# Literature folders (excluded from version control)
+# Submission / revision materials (tracked on `submission-materials` branch only)
 /paper/
 /patent/
-
-# Allow specific revision artifacts under /paper/ to be tracked
-!/paper/
-/paper/*
-!/paper/peer_review/
-/paper/peer_review/*
-!/paper/peer_review/round_1/
-/paper/peer_review/round_1/*
-!/paper/peer_review/round_1/response_letter_final.md
+/Supplementary/
 
 # Codex CLI workspace cache/config (excluded from version control)
 /.codex/
