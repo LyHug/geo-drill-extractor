@@ -1,0 +1,481 @@
+{
+ "source_length": 774,
+ "source_sha1": "8af2f68c394d502c185c5f3036e77c5c29a99336",
+ "summary": {
+  "aligned": 19,
+  "ambiguous": 1,
+  "unlabeled": 1,
+  "conflict": 1,
+  "no_source": 0,
+  "null": 4
+ },
+ "fields": [
+  {
+   "hole_id": "T1-1",
+   "field": "hole_id",
+   "value": "T1-1",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 348,
+     "end": 352,
+     "text": "T1-1",
+     "source": "text",
+     "label": "段落标题"
+    },
+    {
+     "start": 167,
+     "end": 171,
+     "text": "T1-1",
+     "source": "table",
+     "label": "孔号"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "location_desc",
+   "value": "轨道巷12#点前20m正前方向",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 149,
+     "end": 164,
+     "text": "轨道巷12#点前20m正前方向",
+     "source": "table",
+     "label": "钻探位置"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "design_depth",
+   "value": 80,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 397,
+     "end": 399,
+     "text": "80",
+     "source": "text",
+     "label": "设计孔深"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "design_azimuth",
+   "value": 250,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 377,
+     "end": 380,
+     "text": "250",
+     "source": "text",
+     "label": "设计方位"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "design_inclination",
+   "value": -20,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 387,
+     "end": 390,
+     "text": "-20",
+     "source": "text",
+     "label": "设计倾角"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "design_diameter",
+   "value": 108,
+   "status": "unlabeled",
+   "anchors": [
+    {
+     "start": 437,
+     "end": 440,
+     "text": "108",
+     "source": "text",
+     "label": null
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "actual_depth",
+   "value": 80.5,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 499,
+     "end": 503,
+     "text": "80.5",
+     "source": "text",
+     "label": "终孔"
+    },
+    {
+     "start": 202,
+     "end": 206,
+     "text": "80.5",
+     "source": "table",
+     "label": "终孔孔深"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "actual_azimuth",
+   "value": 250,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 423,
+     "end": 426,
+     "text": "250",
+     "source": "text",
+     "label": "实际方位"
+    },
+    {
+     "start": 174,
+     "end": 177,
+     "text": "250",
+     "source": "table",
+     "label": "方位"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "actual_inclination",
+   "value": -20,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 430,
+     "end": 433,
+     "text": "-20",
+     "source": "text",
+     "label": "实际倾角"
+    },
+    {
+     "start": 181,
+     "end": 184,
+     "text": "-20",
+     "source": "table",
+     "label": "倾角"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "actual_diameter",
+   "value": 108,
+   "status": "ambiguous",
+   "anchors": [
+    {
+     "start": 437,
+     "end": 440,
+     "text": "108",
+     "source": "text",
+     "label": "钻头直径"
+    },
+    {
+     "start": 473,
+     "end": 475,
+     "text": "75",
+     "source": "text",
+     "label": "钻头直径"
+    },
+    {
+     "start": 490,
+     "end": 492,
+     "text": "75",
+     "source": "text",
+     "label": "钻头直径"
+    }
+   ],
+   "candidates": [
+    75.0,
+    108.0
+   ]
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "start_formation",
+   "value": "3煤",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 188,
+     "end": 190,
+     "text": "3煤",
+     "source": "table",
+     "label": "开孔位置"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "end_formation",
+   "value": "8煤底板砂岩",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 193,
+     "end": 199,
+     "text": "8煤底板砂岩",
+     "source": "table",
+     "label": "终孔层位"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-1",
+   "field": "drilling_date",
+   "value": "2021-03-01",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 405,
+     "end": 414,
+     "text": "2021年3月1日",
+     "source": "text",
+     "label": "日期"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "hole_id",
+   "value": "T1-2",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 513,
+     "end": 517,
+     "text": "T1-2",
+     "source": "text",
+     "label": "段落标题"
+    },
+    {
+     "start": 230,
+     "end": 235,
+     "text": "T1 -2",
+     "source": "table",
+     "label": "孔号"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "location_desc",
+   "value": "轨道巷12#点前20m正前方向",
+   "status": "conflict",
+   "anchors": [
+    {
+     "start": 525,
+     "end": 536,
+     "text": "轨道巷12#点前20m",
+     "source": "text",
+     "label": "设计位置"
+    },
+    {
+     "start": 212,
+     "end": 227,
+     "text": "轨道巷12#点前20m左侧方向",
+     "source": "table",
+     "label": "钻探位置"
+    }
+   ],
+   "candidates": [
+    "轨道巷12#点前20m",
+    "轨道巷12#点前20m左侧方向"
+   ]
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "design_depth",
+   "value": 100,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 562,
+     "end": 565,
+     "text": "100",
+     "source": "text",
+     "label": "设计孔深"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "design_azimuth",
+   "value": 235,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 542,
+     "end": 545,
+     "text": "235",
+     "source": "text",
+     "label": "设计方位"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "design_inclination",
+   "value": -12,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 552,
+     "end": 555,
+     "text": "−12",
+     "source": "text",
+     "label": "设计倾角"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "design_diameter",
+   "value": null,
+   "status": "null",
+   "anchors": [],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "actual_depth",
+   "value": 101,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 629,
+     "end": 632,
+     "text": "101",
+     "source": "text",
+     "label": "终孔"
+    },
+    {
+     "start": 266,
+     "end": 269,
+     "text": "101",
+     "source": "table",
+     "label": "终孔孔深"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "actual_azimuth",
+   "value": 235,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 589,
+     "end": 592,
+     "text": "235",
+     "source": "text",
+     "label": "实际方位"
+    },
+    {
+     "start": 238,
+     "end": 241,
+     "text": "235",
+     "source": "table",
+     "label": "方位"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "actual_inclination",
+   "value": -12,
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 596,
+     "end": 599,
+     "text": "-12",
+     "source": "text",
+     "label": "实际倾角"
+    },
+    {
+     "start": 245,
+     "end": 248,
+     "text": "-12",
+     "source": "table",
+     "label": "倾角"
+    }
+   ],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "actual_diameter",
+   "value": null,
+   "status": "null",
+   "anchors": [],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "start_formation",
+   "value": null,
+   "status": "null",
+   "anchors": [],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "end_formation",
+   "value": null,
+   "status": "null",
+   "anchors": [],
+   "candidates": []
+  },
+  {
+   "hole_id": "T1-2",
+   "field": "drilling_date",
+   "value": "2021-03-04",
+   "status": "aligned",
+   "anchors": [
+    {
+     "start": 571,
+     "end": 580,
+     "text": "2021年3月4日",
+     "source": "text",
+     "label": "日期"
+    }
+   ],
+   "candidates": []
+  }
+ ]
+}

@@ -183,6 +183,7 @@ class CoordinateInferencer:
         
         # 处理每个位置组
         for location_desc, holes in location_groups.items():
+            analysed = False
             try:
                 # 记录处理时间
                 start_time = time.time()
@@ -199,13 +200,19 @@ class CoordinateInferencer:
                     continue
 
                 location_analysis_success_count += 1
+                analysed = True
                 group_coords = self._process_location_group(
                     location_info, holes, start_coordinate_failure_counts
                 )
                 coordinates.update(group_coords)
                      
             except Exception as e:
+                # 计入失败统计，保证「分析成功的组 = 有坐标的组 + 起点失败计数」
                 logger.error(f"推断坐标失败 (位置: {location_desc}): {str(e)}")
+                if analysed:
+                    start_coordinate_failure_counts['start_coordinate_exception'] += 1
+                else:
+                    location_analysis_failure_counts['location_analysis_exception'] += 1
                 continue
         
         # 统计信息
@@ -328,7 +335,12 @@ class CoordinateInferencer:
             if not location_info.get('参考点号'):
                 logger.warning(f"位置分析结果缺少参考点号: {location_desc}")
                 return None, 'missing_reference_point'
-            
+
+            invalid = self._normalize_location_info(location_info)
+            if invalid:
+                logger.warning(f"位置分析结果字段格式不合预期 ({invalid}): {location_desc}")
+                return None, invalid
+
             return location_info, None
              
         except json.JSONDecodeError as e:
@@ -338,6 +350,102 @@ class CoordinateInferencer:
             logger.error(f"位置描述分析失败: {str(e)}")
             return None, 'llm_call_failed'
     
+    @staticmethod
+    def _normalize_location_info(location_info: Dict[str, Any]) -> Optional[str]:
+        """
+        把位置分析结果里的数值/偏移字段规范成计算所需的类型（原地修改）
+
+        只处理此前会在坐标计算中抛异常的写法：距离写成 "20m"、偏移写成 0/null/"none"、
+        置信度写成字符串。无法解释的写法（如偏移给了非零数字却没有方向）返回
+        'location_field_invalid'，计入位置分析的协议/解析失败。
+        """
+        import re as _re
+
+        def num(v: Any, default: Optional[float] = 0.0) -> Optional[float]:
+            if v is None or (isinstance(v, str) and not v.strip()):
+                return default
+            if isinstance(v, bool):
+                return None
+            if isinstance(v, (int, float)):
+                return float(v)
+            m = _re.fullmatch(r'\s*([+-]?\d+(?:\.\d+)?)\s*(?:m|米)?\s*', str(v))
+            return float(m.group(1)) if m else None
+
+        distance = num(location_info.get('距离'))
+        if distance is None:
+            return 'location_field_invalid'
+        location_info['距离'] = distance
+
+        for key in ('侧向偏移', '垂直偏移'):
+            v = location_info.get(key)
+            if isinstance(v, dict):
+                d = num(v.get('距离'))
+                if d is None:
+                    return 'location_field_invalid'
+                location_info[key] = {**v, '方向': v.get('方向') or 'none', '距离': d}
+            elif v is None or v == 0 or (isinstance(v, str) and v.strip().lower() in ('', 'none', 'null', '无', '0')):
+                location_info[key] = {'方向': 'none', '距离': 0.0}
+            else:
+                return 'location_field_invalid'
+
+        confidence = num(location_info.get('置信度'), 0.8)
+        location_info['置信度'] = 0.8 if confidence is None else confidence
+        return None
+
+    def _classify_start_failure(self, location_info: Dict[str, Any]) -> str:
+        """起点坐标计算失败时的原因分类（语义/几何失败口径）"""
+        ref_id = str(location_info.get('参考点号', '')).strip()
+        direction_type = str(location_info.get('方向类型', '')).strip()
+        direction_ref_id = location_info.get('方向参考点号')
+
+        if not ref_id or ref_id not in self.point_dict:
+            return 'survey_ref_point_not_found'
+        if direction_type in {'forward', 'backward', 'between'}:
+            if not direction_ref_id or str(direction_ref_id) not in self.point_dict:
+                return 'survey_direction_point_not_found'
+        return 'start_coordinate_failed'
+
+    def infer_hole(
+        self,
+        hole: DrillHoleEntity
+    ) -> Tuple[Optional[Dict[str, Coordinate]], Optional[str], Optional[Dict[str, Any]]]:
+        """
+        单孔坐标推断（供人工核对后重算使用）
+
+        Returns:
+            (坐标字典 {'start', 'end'?} 或 None, 失败原因代码或 None, 位置分析结果或 None)
+            失败原因与 infer_coordinates 统计口径一致：missing_reference_point /
+            location_json_* / location_field_invalid / llm_call_failed / survey_ref_point_not_found /
+            survey_direction_point_not_found / start_coordinate_failed / start_coordinate_exception，
+            另有 no_survey_points、missing_location_desc。
+        """
+        if not self.point_dict:
+            return None, 'no_survey_points', None
+        desc = (hole.location_desc or '').strip()
+        if not desc:
+            return None, 'missing_location_desc', None
+        location_info, failure_reason = self._analyze_location_with_cache(desc)
+        if not location_info:
+            return None, failure_reason or 'unknown', None
+        try:
+            coords = self._process_location_group(location_info, [hole])
+        except Exception as e:  # 模型输出字段类型不合预期（如偏移给了数字）时不让界面崩
+            logger.error(f"单孔坐标计算异常 ({hole.hole_id}): {str(e)}")
+            return None, 'start_coordinate_exception', location_info
+        if hole.hole_id in coords:
+            return coords[hole.hole_id], None, location_info
+        return None, self._classify_start_failure(location_info), location_info
+
+    def end_coordinate_for(self, hole: DrillHoleEntity, start: Coordinate) -> Optional[Coordinate]:
+        """按孔的实际参数（缺失时用设计参数）从给定起点算终点"""
+        p = hole.actual_params
+        if p is not None and None not in (p.actual_azimuth, p.actual_inclination, p.actual_depth):
+            return self._calculate_end_coordinate(start, p.actual_azimuth, p.actual_inclination, p.actual_depth)
+        d = hole.design_params
+        if d is not None:
+            return self._calculate_end_coordinate(start, d.design_azimuth, d.design_inclination, d.design_depth)
+        return None
+
     def _process_location_group(
         self, 
         location_info: Dict[str, Any],
@@ -362,19 +470,7 @@ class CoordinateInferencer:
         if not start_coords:
             logger.warning(f"无法计算起点坐标: {location_info}")
             if start_coordinate_failure_counts is not None:
-                ref_id = str(location_info.get('参考点号', '')).strip()
-                direction_type = str(location_info.get('方向类型', '')).strip()
-                direction_ref_id = location_info.get('方向参考点号')
-
-                if not ref_id or ref_id not in self.point_dict:
-                    start_coordinate_failure_counts['survey_ref_point_not_found'] += 1
-                elif direction_type in {'forward', 'backward', 'between'}:
-                    if not direction_ref_id or str(direction_ref_id) not in self.point_dict:
-                        start_coordinate_failure_counts['survey_direction_point_not_found'] += 1
-                    else:
-                        start_coordinate_failure_counts['start_coordinate_failed'] += 1
-                else:
-                    start_coordinate_failure_counts['start_coordinate_failed'] += 1
+                start_coordinate_failure_counts[self._classify_start_failure(location_info)] += 1
             return group_coordinates
         
         # 获取置信度和方法

@@ -10,6 +10,7 @@ from typing import Dict, List, Optional, Any, Union
 from .document_processor import DocumentProcessor
 from .entity_extractor import EntityExtractor
 from .coordinate_inferencer import CoordinateInferencer
+from .evidence_aligner import EvidenceAligner
 from core import (
     LLMModel,
     ProcessResult,
@@ -41,7 +42,8 @@ class ExtractionPipeline:
         config_loader: Optional[Any] = None,
         survey_points_file: Optional[str] = None,
         enable_cache: bool = False,
-        stream_mode: bool = False
+        stream_mode: bool = False,
+        enable_evidence_alignment: bool = False
     ):
         """
         初始化提取流水线
@@ -53,6 +55,8 @@ class ExtractionPipeline:
             survey_points_file: 导线点文件路径
             enable_cache: 是否启用缓存（实验时建议关闭）
             stream_mode: 是否启用流式输出显示
+            enable_evidence_alignment: 是否在实体抽取后做证据回链（供前端原文对照；
+                不调用 LLM，默认关闭，实验流程不受影响）
         """
         # 获取配置
         self.config_loader = config_loader or get_config_loader()
@@ -89,6 +93,8 @@ class ExtractionPipeline:
             stream_mode=stream_mode
         )
         
+        self.evidence_aligner = EvidenceAligner() if enable_evidence_alignment else None
+
         self.enable_cache = enable_cache
         self.stream_mode = stream_mode
         logger.info(f"ExtractionPipeline初始化完成，模型: {self.model}")
@@ -159,7 +165,17 @@ class ExtractionPipeline:
             entity_extraction_time = time.time() - entity_start_time
             metadata['entity_extraction_time'] = entity_extraction_time
             metadata['entity_count'] = len(drill_holes)
-            
+
+            # 2b. 证据回链（可选）：每个字段锚回原文，结果放进 metadata 供前端使用
+            if self.evidence_aligner is not None:
+                try:
+                    report = self.evidence_aligner.align(markdown_text, drill_holes)
+                    metadata['source_text'] = markdown_text
+                    metadata['evidence'] = report.to_dict()
+                except Exception as e:  # 回链失败不影响抽取与坐标推理
+                    logger.warning(f"证据回链失败: {str(e)}")
+                    metadata['evidence_error'] = str(e)
+
             # 3. 坐标推理
             logger.info(f"步骤3: 推断空间坐标")
             coord_start_time = time.time()
