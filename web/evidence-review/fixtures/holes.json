@@ -1,0 +1,36 @@
+[
+ {
+  "hole_id": "T1-1",
+  "location_desc": "轨道巷12#点前20m正前方向",
+  "design_params": {
+   "design_depth": 80,
+   "design_azimuth": 250,
+   "design_inclination": -20,
+   "design_diameter": 108
+  },
+  "actual_params": {
+   "actual_depth": 80.5,
+   "actual_azimuth": 250,
+   "actual_inclination": -20,
+   "actual_diameter": 108,
+   "start_formation": "3煤",
+   "end_formation": "8煤底板砂岩",
+   "drilling_date": "2021-03-01"
+  }
+ },
+ {
+  "hole_id": "T1-2",
+  "location_desc": "轨道巷12#点前20m正前方向",
+  "design_params": {
+   "design_depth": 100,
+   "design_azimuth": 235,
+   "design_inclination": -12
+  },
+  "actual_params": {
+   "actual_depth": 101,
+   "actual_azimuth": 235,
+   "actual_inclination": -12,
+   "drilling_date": "2021-03-04"
+  }
+ }
+]

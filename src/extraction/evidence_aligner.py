@@ -20,6 +20,9 @@
 ``no_source``  孔范围内完全找不到
 ``null``       模型返回空值，不评
 
+偏移单位：``start`` / ``end`` 是 Unicode 码点下标（即 Python ``str`` 下标），不是 UTF-16 下标。
+前端（JS 字符串按 UTF-16 计）须换算，见 ``web/evidence-review/evidence.js`` 的 ``codePointIndexer``。
+
 局限：标签规则针对现有钻孔竣工报告的写法；字符串字段（位置描述、地层）只做
 去空白后的严格相等比较，同义缩写（如「本灰」/「本溪灰岩」）会被判为不符。
 """
