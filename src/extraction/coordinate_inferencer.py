@@ -338,6 +338,60 @@ class CoordinateInferencer:
             logger.error(f"位置描述分析失败: {str(e)}")
             return None, 'llm_call_failed'
     
+    def _classify_start_failure(self, location_info: Dict[str, Any]) -> str:
+        """起点坐标计算失败时的原因分类（语义/几何失败口径）"""
+        ref_id = str(location_info.get('参考点号', '')).strip()
+        direction_type = str(location_info.get('方向类型', '')).strip()
+        direction_ref_id = location_info.get('方向参考点号')
+
+        if not ref_id or ref_id not in self.point_dict:
+            return 'survey_ref_point_not_found'
+        if direction_type in {'forward', 'backward', 'between'}:
+            if not direction_ref_id or str(direction_ref_id) not in self.point_dict:
+                return 'survey_direction_point_not_found'
+        return 'start_coordinate_failed'
+
+    def infer_hole(
+        self,
+        hole: DrillHoleEntity
+    ) -> Tuple[Optional[Dict[str, Coordinate]], Optional[str], Optional[Dict[str, Any]]]:
+        """
+        单孔坐标推断（供人工核对后重算使用）
+
+        Returns:
+            (坐标字典 {'start', 'end'?} 或 None, 失败原因代码或 None, 位置分析结果或 None)
+            失败原因与 infer_coordinates 统计口径一致：missing_reference_point /
+            location_json_* / llm_call_failed / survey_ref_point_not_found /
+            survey_direction_point_not_found / start_coordinate_failed，
+            另有 no_survey_points、missing_location_desc。
+        """
+        if not self.point_dict:
+            return None, 'no_survey_points', None
+        desc = (hole.location_desc or '').strip()
+        if not desc:
+            return None, 'missing_location_desc', None
+        location_info, failure_reason = self._analyze_location_with_cache(desc)
+        if not location_info:
+            return None, failure_reason or 'unknown', None
+        try:
+            coords = self._process_location_group(location_info, [hole])
+        except Exception as e:  # 模型输出字段类型不合预期（如偏移给了数字）时不让界面崩
+            logger.error(f"单孔坐标计算异常 ({hole.hole_id}): {str(e)}")
+            return None, 'start_coordinate_failed', location_info
+        if hole.hole_id in coords:
+            return coords[hole.hole_id], None, location_info
+        return None, self._classify_start_failure(location_info), location_info
+
+    def end_coordinate_for(self, hole: DrillHoleEntity, start: Coordinate) -> Optional[Coordinate]:
+        """按孔的实际参数（缺失时用设计参数）从给定起点算终点"""
+        p = hole.actual_params
+        if p is not None and None not in (p.actual_azimuth, p.actual_inclination, p.actual_depth):
+            return self._calculate_end_coordinate(start, p.actual_azimuth, p.actual_inclination, p.actual_depth)
+        d = hole.design_params
+        if d is not None:
+            return self._calculate_end_coordinate(start, d.design_azimuth, d.design_inclination, d.design_depth)
+        return None
+
     def _process_location_group(
         self, 
         location_info: Dict[str, Any],
@@ -362,19 +416,7 @@ class CoordinateInferencer:
         if not start_coords:
             logger.warning(f"无法计算起点坐标: {location_info}")
             if start_coordinate_failure_counts is not None:
-                ref_id = str(location_info.get('参考点号', '')).strip()
-                direction_type = str(location_info.get('方向类型', '')).strip()
-                direction_ref_id = location_info.get('方向参考点号')
-
-                if not ref_id or ref_id not in self.point_dict:
-                    start_coordinate_failure_counts['survey_ref_point_not_found'] += 1
-                elif direction_type in {'forward', 'backward', 'between'}:
-                    if not direction_ref_id or str(direction_ref_id) not in self.point_dict:
-                        start_coordinate_failure_counts['survey_direction_point_not_found'] += 1
-                    else:
-                        start_coordinate_failure_counts['start_coordinate_failed'] += 1
-                else:
-                    start_coordinate_failure_counts['start_coordinate_failed'] += 1
+                start_coordinate_failure_counts[self._classify_start_failure(location_info)] += 1
             return group_coordinates
         
         # 获取置信度和方法
