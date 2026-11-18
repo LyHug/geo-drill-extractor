@@ -92,7 +92,8 @@ def test_infer_hole_malformed_offsets_do_not_raise(survey):
     bad = {'轨道巷12#点前20m正前方向': dict(LOCATION_JSON['轨道巷12#点前20m正前方向'], 侧向偏移=5)}
     inf = CoordinateInferencer(survey, FakeLLM('m', bad))
     coords, reason, _ = inf.infer_hole(t11())
-    assert coords is None and reason == 'start_coordinate_failed'
+    assert coords is None and reason == 'location_field_invalid'
+    assert FAILURE_MESSAGES[reason][1] == 'protocol_parsing'
 
 
 def test_batch_failure_counts_unchanged(inf_a):
@@ -105,6 +106,7 @@ def test_batch_failure_counts_unchanged(inf_a):
 
 def test_every_failure_code_has_message():
     codes = {'missing_reference_point', 'location_json_not_object', 'location_json_decode_error', 'llm_call_failed',
+             'location_field_invalid', 'location_analysis_exception', 'start_coordinate_exception',
              'survey_ref_point_not_found', 'survey_direction_point_not_found', 'start_coordinate_failed',
              'no_survey_points', 'missing_location_desc'}
     assert codes <= set(FAILURE_MESSAGES)
